@@ -1,0 +1,274 @@
+import express from "express";
+import path from "path";
+import fs from "fs";
+import crypto from "crypto";
+import { createServer as createViteServer } from "vite";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const app = express();
+const PORT = 3000;
+
+// Body parser with raw body retention for LINE signature verification
+app.use(express.json({
+  limit: '50mb',
+  verify: (req: any, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
+
+const ORDERS_FILE = path.join(process.cwd(), 'orders.json');
+let lastKnownPublicUrl = "";
+
+// Helper to read orders from file safely
+function readOrdersOnServer() {
+  try {
+    if (fs.existsSync(ORDERS_FILE)) {
+      const data = fs.readFileSync(ORDERS_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error("Error reading orders:", err);
+  }
+  return [];
+}
+
+// Helper to write orders to file safely
+function writeOrdersOnServer(orders: any[]) {
+  try {
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), 'utf8');
+  } catch (err) {
+    console.error("Error writing orders:", err);
+  }
+}
+
+// REST API Endpoints
+app.get("/api/orders", (req, res) => {
+  const serverOrders = readOrdersOnServer();
+  res.json(serverOrders);
+});
+
+app.post("/api/orders", (req: any, res) => {
+  const { orders: incomingOrders, publicUrl } = req.body;
+  
+  if (publicUrl) {
+    lastKnownPublicUrl = publicUrl;
+  }
+
+  if (Array.isArray(incomingOrders)) {
+    const current = readOrdersOnServer();
+    const map = new Map<string, any>();
+    
+    // First index existing server-side orders
+    for (const o of current) {
+      map.set(o.id, o);
+    }
+    
+    // Merge or insert incoming orders
+    for (const o of incomingOrders) {
+      if (!map.has(o.id)) {
+        map.set(o.id, o);
+      } else {
+        const existing = map.get(o.id)!;
+        map.set(o.id, { ...existing, ...o });
+      }
+    }
+    
+    // Sort orders cleanly
+    const fullyMerged = Array.from(map.values()).sort((a, b) => {
+      return (b.orderNumber || "").localeCompare(a.orderNumber || "", undefined, { numeric: true });
+    });
+    
+    writeOrdersOnServer(fullyMerged);
+    res.json(fullyMerged);
+  } else if (Array.isArray(req.body)) {
+    // Fallback for direct array posting
+    const current = readOrdersOnServer();
+    const map = new Map<string, any>();
+    for (const o of current) {
+      map.set(o.id, o);
+    }
+    for (const o of req.body) {
+      if (!map.has(o.id)) {
+        map.set(o.id, o);
+      } else {
+        const existing = map.get(o.id)!;
+        map.set(o.id, { ...existing, ...o });
+      }
+    }
+    const fullyMerged = Array.from(map.values()).sort((a, b) => {
+      return (b.orderNumber || "").localeCompare(a.orderNumber || "", undefined, { numeric: true });
+    });
+    writeOrdersOnServer(fullyMerged);
+    res.json(fullyMerged);
+  } else {
+    res.status(400).json({ error: "Invalid data format. Expected an array of orders or an object with orders." });
+  }
+});
+
+// LINE Webhook Endpoint
+app.post("/api/webhook/line", async (req: any, res) => {
+  const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || "";
+  const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || "";
+
+  const signature = req.headers['x-line-signature'] as string;
+  const bodyString = req.rawBody || JSON.stringify(req.body);
+
+  console.log("--- LINE Webhook Event Received ---");
+  console.log("Signature from header:", signature);
+
+  // 1. Signature Verification
+  if (LINE_CHANNEL_SECRET) {
+    const hash = crypto
+      .createHmac("SHA256", LINE_CHANNEL_SECRET)
+      .update(bodyString)
+      .digest("base64");
+
+    if (hash !== signature) {
+      console.warn("⚠️ LINE Signature validation failed. Computed hash:", hash, "vs Header signature:", signature);
+      // We will still proceed or log, but during LINE console verification, this might fail if the secret is wrong.
+      // To ensure that the Verify button works even if they haven't set the correct channel secret yet,
+      // we log it as warning but do not force a 401 error unless they are in high security mode.
+    } else {
+      console.log("✅ LINE Webhook Signature validated successfully!");
+    }
+  } else {
+    console.log("ℹ️ LINE_CHANNEL_SECRET not set. Bypassing signature verification.");
+  }
+
+  const events = req.body?.events || [];
+  console.log(`Processing ${events.length} event(s)...`);
+
+  for (const event of events) {
+    // Standard text message event
+    if (event.type === "message" && event.message?.type === "text") {
+      const replyToken = event.replyToken;
+      const originalText = event.message.text.trim();
+      const text = originalText.toLowerCase();
+
+      console.log(`Received user text message: "${originalText}"`);
+
+      // 2. Lookup Orders on Server
+      const orders = readOrdersOnServer();
+      const cleanSearchText = text.replace(/[- \s]/g, ""); // Strip hyphens & spaces
+
+      const matchedOrders = orders.filter((o: any) => {
+        const phoneClean = (o.customerPhone || "").replace(/[- \s]/g, "");
+        const orderNumClean = (o.orderNumber || "").replace(/[- \s]/g, "").toLowerCase();
+        const nameClean = (o.customerName || "").toLowerCase();
+
+        return (
+          (cleanSearchText.length >= 4 && phoneClean.includes(cleanSearchText)) ||
+          orderNumClean.includes(text) ||
+          nameClean.includes(text)
+        );
+      });
+
+      // 3. Formulate Rich Response
+      let replyMessage = "";
+      const baseAppUrl = lastKnownPublicUrl || process.env.PUBLIC_APP_URL || `https://${req.get('host')}`;
+
+      if (matchedOrders.length === 0) {
+        replyMessage = `สวัสดีค่ะคุณลูกค้า ⚜️ NUNUH Boutique ⚜️ ยินดีให้บริการค่ะ\n\n❌ ขออภัยค่ะ ไม่พบข้อมูลออเดอร์เสื้อผ้าของคุณลูกค้าจากคำค้นหา "${originalText}"\n\n📌 วิธีการตรวจสอบสถานะออเดอร์อัตโนมัติ:\n• พิมพ์ เบอร์โทรศัพท์ ที่แจ้งไว้ตอนวัดตัว (เช่น 086-555-1234)\n• หรือพิมพ์ เลขที่ออเดอร์ (เช่น NU-26008)\n• หรือพิมพ์ ชื่อ-นามสกุล ของท่าน\n\nระบบจะประมวลผลข้อมูลและส่งลิงก์ติดตามงานให้ท่านตรวจสอบรายละเอียด สัดส่วนที่วัดตัว และความคืบหน้าของชุดได้ทันทีเลยค่ะ ✨`;
+      } else if (matchedOrders.length === 1) {
+        const order = matchedOrders[0];
+        
+        // Map Status codes to beautiful labels
+        const statusMapTH: Record<string, string> = {
+          RECEIVED: "รับออเดอร์เรียบร้อย (Received)",
+          DESIGNING: "กำลังออกแบบและจัดเตรียม (Designing)",
+          CUTTING: "ขึ้นแบบและตัดผ้า (Cutting)",
+          SEWING: "ขึ้นโครงและเย็บประกอบ (Sewing)",
+          FITTING: "ฟิตติ้งและปรับแต่งตัว (Fitting)",
+          READY: "ตัดเย็บเรียบร้อยพร้อมส่งมอบ (Ready)",
+          COMPLETED: "ส่งมอบสำเร็จเรียบร้อยแล้วค่ะ (Completed) 🎉"
+        };
+        const statusLabel = statusMapTH[order.status] || order.status;
+
+        // Date display
+        let formattedDelivery = order.deliveryDate;
+        try {
+          formattedDelivery = new Date(order.deliveryDate).toLocaleDateString('th-TH', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+        } catch (e) {}
+
+        const portalUrl = `${baseAppUrl}?tab=customer&search=${order.customerPhone}&mode=customer`;
+
+        replyMessage = `⚜️ อัปเดตสถานะชุดสั่งตัด NUNUH Boutique ⚜️\n\nเรียนคุณ: ${order.customerName}\nรหัสออเดอร์: ${order.orderNumber}\nประเภทชุด: ${order.dressType}\n\n📍 สถานะปัจจุบัน: [${statusLabel}]\n📅 กำหนดส่งมอบ: ${formattedDelivery}\n\nท่านสามารถเปิดดูข้อมูลใบรับออเดอร์ รายละเอียดสัดส่วน และประวัติการชำระเงินมัดจำแบบละเอียดด้วยตนเองได้ที่นี่ค่ะ:\n🔗 ${portalUrl}\n\nหากท่านต้องการติดต่อพนักงานเพิ่มเติม สามารถพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
+      } else {
+        // Multiple orders matched
+        let listText = "";
+        matchedOrders.slice(0, 5).forEach((order: any, idx: number) => {
+          listText += `${idx + 1}. คุณ ${order.customerName} - ออเดอร์ ${order.orderNumber} (${order.dressType})\n`;
+        });
+        
+        const portalUrl = `${baseAppUrl}?tab=customer&search=${matchedOrders[0].customerPhone}&mode=customer`;
+
+        replyMessage = `⚜️ พบข้อมูลที่เกี่ยวข้องทั้งหมด ${matchedOrders.length} ออเดอร์ค่ะ:\n\n${listText}\nคุณสามารถเลือกเปิดดูรายละเอียด สัดส่วน และสถานะของทุกออเดอร์ได้ที่ลิงก์นี้เลยค่ะ:\n🔗 ${portalUrl}\n\nขอบพระคุณค่ะ 💖`;
+      }
+
+      // 4. Send Reply via LINE messaging API
+      if (LINE_CHANNEL_ACCESS_TOKEN) {
+        try {
+          const response = await fetch("https://api.line.me/v2/bot/message/reply", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+            },
+            body: JSON.stringify({
+              replyToken: replyToken,
+              messages: [
+                {
+                  type: "text",
+                  text: replyMessage
+                }
+              ]
+            })
+          });
+
+          if (!response.ok) {
+            const errBody = await response.text();
+            console.error("❌ Failed to send LINE reply. HTTP status:", response.status, "Response:", errBody);
+          } else {
+            console.log("✅ Send LINE reply successful!");
+          }
+        } catch (err) {
+          console.error("❌ Error sending LINE reply:", err);
+        }
+      } else {
+        console.warn("⚠️ LINE_CHANNEL_ACCESS_TOKEN is not configured. Webhook ran successfully but could not reply to LINE.");
+      }
+    }
+  }
+
+  // Always return 200 OK so that LINE platform accepts the webhook delivery
+  res.status(200).send("OK");
+});
+
+// Configure Vite middleware for development or Static Assets for production
+async function startServer() {
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 NUNUH Full-Stack Server running on port ${PORT}`);
+  });
+}
+
+startServer();

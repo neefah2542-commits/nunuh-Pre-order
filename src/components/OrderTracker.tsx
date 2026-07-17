@@ -25,7 +25,9 @@ import {
   MessageSquare,
   Printer,
   Camera,
-  Pencil
+  Pencil,
+  Globe,
+  Link as LinkIcon
 } from 'lucide-react';
 import PrintOrderModal from './PrintOrderModal';
 import EditOrderModal from './EditOrderModal';
@@ -45,6 +47,20 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+
+  const [publicUrl, setPublicUrl] = useState(() => {
+    return localStorage.getItem('nunuh_public_url') || window.location.origin;
+  });
+  const [showUrlSettings, setShowUrlSettings] = useState(false);
+
+  const handleSavePublicUrl = (url: string) => {
+    let cleanUrl = url.trim();
+    if (cleanUrl.endsWith('/')) {
+      cleanUrl = cleanUrl.slice(0, -1);
+    }
+    setPublicUrl(cleanUrl);
+    localStorage.setItem('nunuh_public_url', cleanUrl);
+  };
 
   const getSocialInfo = (socialStr?: string) => {
     if (!socialStr) return null;
@@ -85,7 +101,7 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
       month: 'long',
       year: 'numeric'
     });
-    const portalUrl = `${window.location.origin}?tab=customer&search=${order.customerPhone}&mode=customer`;
+    const portalUrl = `${publicUrl}?tab=customer&search=${order.customerPhone}&mode=customer`;
     const message = `⚜️ อัปเดตสถานะชุดสั่งตัด NUNUH Boutique ⚜️\n\nเรียนคุณ: ${order.customerName}\nรหัสออเดอร์: ${order.orderNumber}\nประเภทชุด: ${order.dressType}\n\n📍 สถานะปัจจุบัน: [${currentStatusCfg.label}]\n➡️ "${currentStatusCfg.description}"\n\n📅 กำหนดส่งมอบ: ${formattedDelivery}\n\nท่านสามารถตรวจสอบข้อมูลสัดส่วนและติดตามความคืบหน้าแบบละเอียดด้วยตนเองได้ที่นี่:\n🔗 ${portalUrl}\n\nขอขอบพระคุณที่เลือกใช้บริการค่ะ ✨`;
 
     try {
@@ -96,6 +112,7 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
 
     alert(
       `📲 คัดลอกข้อมูลและข้อความอัปเดตสถานะของ คุณ ${order.customerName} เรียบร้อยแล้ว!\n\n` +
+      `• ลิงก์เช็คสถานะลูกค้า: "${portalUrl}"\n` +
       `• ชื่อลูกค้าสำหรับค้นหาแชท: "${order.customerName}"\n\n` +
       `เมื่อหน้าต่างใหม่เปิดขึ้น ให้แอดมินใช้คำว่า "${order.customerName}" ในช่องค้นหาแชท LINE Official ของร้านเพื่อวางข้อความและคุยได้ทันทีเลยค่ะ 💬`
     );
@@ -261,6 +278,66 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
 
   return (
     <div className="space-y-6">
+
+      {/* Public Render URL Config Header */}
+      <div className="bg-gradient-to-r from-amber-50 to-amber-100/30 border border-amber-200/60 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center space-x-2.5">
+          <div className="p-2 bg-amber-500/10 text-amber-700 rounded-xl">
+            <Globe className="h-4.5 w-4.5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-black text-natural-espresso flex items-center gap-1.5">
+              <span>🔗 ลิงก์สาธารณะสำหรับแชร์ให้ลูกค้า (Render.com URL)</span>
+            </h4>
+            <p className="text-[10px] text-natural-espresso/60 font-medium">
+              ปัจจุบันใช้: <strong className="text-amber-800 break-all">{publicUrl}</strong>
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowUrlSettings(!showUrlSettings)}
+          className="text-xs font-bold text-amber-800 hover:text-amber-900 bg-white hover:bg-amber-100/50 px-3 py-1.5 rounded-xl border border-amber-200 transition-colors shadow-2xs cursor-pointer flex items-center space-x-1"
+        >
+          <span>{showUrlSettings ? '✕ ปิดตั้งค่า' : '⚙️ ตั้งค่าลิงก์ Render'}</span>
+        </button>
+      </div>
+
+      {showUrlSettings && (
+        <div className="bg-white p-5 rounded-2xl border border-natural-wheat shadow-md space-y-3.5 animate-fadeIn">
+          <div className="space-y-1">
+            <h5 className="text-xs font-bold text-natural-espresso">ตั้งค่าลิงก์หลักของร้าน (Render App URL)</h5>
+            <p className="text-[11px] text-natural-espresso/60 leading-relaxed">
+              กรอกลิงก์เว็บไซต์ของร้านคุณที่ได้มาจาก Render.com (เช่น <code className="bg-natural-sand/50 px-1 py-0.5 rounded text-[10px] font-mono">https://nunuh.onrender.com</code>) เพื่อให้ระบบสร้างลิงก์เช็คสถานะออเดอร์ให้ลูกค้าในแชท LINE คัดลอกไปส่งได้ทันที แม้ว่าตัวผู้ดูแลร้านกำลังใช้งานระบบผ่านช่องทางผู้พัฒนา (AI Studio) อยู่ค่ะ
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-natural-espresso/40" />
+              <input
+                type="url"
+                value={publicUrl}
+                onChange={(e) => handleSavePublicUrl(e.target.value)}
+                placeholder="เช่น https://nunuh.onrender.com"
+                className="w-full text-xs pl-8.5 pr-4 py-2.5 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 bg-natural-cream/10 font-mono"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                handleSavePublicUrl(window.location.origin);
+                alert('รีเซ็ตลิงก์หลักกลับมาใช้ URL ปัจจุบันเรียบร้อยแล้วค่ะ');
+              }}
+              className="px-4 py-2 bg-natural-sand hover:bg-natural-wheat text-natural-espresso font-bold text-xs rounded-xl transition-colors cursor-pointer shrink-0"
+            >
+              🔄 ใช้ลิงก์ปัจจุบัน
+            </button>
+          </div>
+          <p className="text-[10px] text-amber-600 font-bold">
+            💡 ตัวอย่างลิงก์เช็คสถานะที่จะถูกส่ง: <span className="break-all font-mono text-[9px] bg-amber-50 px-1 py-0.5 rounded">{publicUrl}?tab=customer&search=086-555-1234&mode=customer</span>
+          </p>
+        </div>
+      )}
       
       {/* Search and Filters Controls */}
       <div className="bg-white p-5 rounded-2xl border border-natural-wheat shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -763,7 +840,7 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                                   month: 'long',
                                   year: 'numeric'
                                 });
-                                const portalUrl = `${window.location.origin}?tab=customer&search=${order.customerPhone}&mode=customer`;
+                                const portalUrl = `${publicUrl}?tab=customer&search=${order.customerPhone}&mode=customer`;
                                 const message = `⚜️ อัปเดตสถานะชุดสั่งตัด NUNUH Boutique ⚜️\n\nเรียนคุณ: ${order.customerName}\nรหัสออเดอร์: ${order.orderNumber}\nประเภทชุด: ${order.dressType}\n\n📍 สถานะปัจจุบัน: [${currentStatusCfg.label}]\n➡️ "${currentStatusCfg.description}"\n\n📅 กำหนดส่งมอบ: ${formattedDelivery}\n\nท่านสามารถตรวจสอบข้อมูลสัดส่วนและติดตามความคืบหน้าแบบละเอียดด้วยตนเองได้ที่นี่:\n🔗 ${portalUrl}\n\nขอขอบพระคุณที่เลือกใช้บริการค่ะ ✨`;
                                 
                                 navigator.clipboard.writeText(message);

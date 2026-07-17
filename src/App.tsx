@@ -56,6 +56,38 @@ export default function App() {
     });
   };
 
+  // ซิงค์ข้อมูลกับ Server Backend
+  const syncWithServer = async (ordersToUpload?: Order[]) => {
+    try {
+      const storedLocal = localStorage.getItem('nunuh_orders');
+      let currentLocal: Order[] = [];
+      if (storedLocal) {
+        currentLocal = JSON.parse(storedLocal);
+      }
+      
+      const targetOrders = ordersToUpload || currentLocal;
+      const publicUrl = localStorage.getItem('nunuh_public_url') || window.location.origin;
+
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders: targetOrders, publicUrl })
+      });
+      
+      if (response.ok) {
+        const mergedFromServer = await response.json();
+        if (Array.isArray(mergedFromServer)) {
+          // ผสานข้อมูลฝั่งเซิร์ฟเวอร์กลับลง LocalStorage
+          const finalMerged = mergeOrders(currentLocal, mergedFromServer);
+          setOrders(finalMerged);
+          localStorage.setItem('nunuh_orders', JSON.stringify(finalMerged));
+        }
+      }
+    } catch (e) {
+      console.warn('Backend sync is temporarily unavailable, running in local-only mode:', e);
+    }
+  };
+
   // โหลดข้อมูลออเดอร์และแคตตาล็อกจาก LocalStorage หรือตั้งค่าด้วยชุดข้อมูลเริ่มต้น
   useEffect(() => {
     let initialOrders = INITIAL_ORDERS;
@@ -105,6 +137,9 @@ export default function App() {
         setActiveTab(tabParam);
       }
     }
+
+    // เริ่มต้นซิงค์ข้อมูลกับ Backend ทันทีตอนหน้าเว็บโหลด
+    syncWithServer();
   }, []);
 
   // ซิงค์สตรีมข้อมูลเรียลไทม์ข้ามแท็บและหลายผู้ใช้งานที่ใช้ลิงก์เดียวกัน (BroadcastChannel + Storage Event + Polling)
@@ -159,10 +194,16 @@ export default function App() {
       } catch (e) {}
     }, 2500);
 
+    // ตรวจสอบข้อมูลจาก Server ทุกๆ 8 วินาที เพื่อความเรียลไทม์ข้ามเครื่อง
+    const serverPollInterval = setInterval(() => {
+      syncWithServer();
+    }, 8000);
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       if (channel) channel.close();
       clearInterval(pollInterval);
+      clearInterval(serverPollInterval);
     };
   }, []);
 
@@ -180,6 +221,9 @@ export default function App() {
       setOrders(fullyMerged);
       localStorage.setItem('nunuh_orders', JSON.stringify(fullyMerged));
 
+      // ซิงค์ส่งขึ้น Server ทันที
+      syncWithServer(fullyMerged);
+
       // ส่งสัญญาณ BroadcastChannel ไปยังแท็บหรืออุปกรณ์อื่นทันที
       try {
         const channel = new BroadcastChannel('nunuh_multiuser_sync_channel');
@@ -189,6 +233,7 @@ export default function App() {
     } catch (e) {
       setOrders(updatedOrders);
       localStorage.setItem('nunuh_orders', JSON.stringify(updatedOrders));
+      syncWithServer(updatedOrders);
     }
   };
 
