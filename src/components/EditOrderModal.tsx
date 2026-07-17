@@ -18,6 +18,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
   const [customerName, setCustomerName] = useState(order.customerName || '');
   const [customerPhone, setCustomerPhone] = useState(order.customerPhone || '');
   const [customerSocial, setCustomerSocial] = useState(order.customerSocial || '');
+  const [lineUserId, setLineUserId] = useState(order.lineUserId || '');
   const [customerCategory, setCustomerCategory] = useState(order.customerCategory || 'ทั่วไป');
   const [membershipTier, setMembershipTier] = useState<'PRIME' | 'PRIVILEGE' | 'TRADER' | 'MEMBER'>(order.membershipTier || 'MEMBER');
   const [externalOrderId, setExternalOrderId] = useState(order.externalOrderId || '');
@@ -70,6 +71,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
   const [customerPhotoFront, setCustomerPhotoFront] = useState(order.customerPhotoFront || '');
   const [customerPhotoSide, setCustomerPhotoSide] = useState(order.customerPhotoSide || '');
   const [customerPhotoBack, setCustomerPhotoBack] = useState(order.customerPhotoBack || '');
+  const [slipImage, setSlipImage] = useState(order.slipImage || '');
 
   // Ensure body scroll is managed when modal is open
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
     };
   }, []);
 
-  const handleImageUpload = (file: File, type: 'custom' | 'front' | 'side' | 'back') => {
+  const handleImageUpload = (file: File, type: 'custom' | 'front' | 'side' | 'back' | 'slip') => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
@@ -87,6 +89,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
       if (type === 'front') setCustomerPhotoFront(base64String);
       if (type === 'side') setCustomerPhotoSide(base64String);
       if (type === 'back') setCustomerPhotoBack(base64String);
+      if (type === 'slip') setSlipImage(base64String);
     };
     reader.readAsDataURL(file);
   };
@@ -119,6 +122,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
       customerSocial: customerSocial.trim() || undefined,
+      lineUserId: lineUserId.trim() || undefined,
       customerCategory: customerCategory.trim() || undefined,
       membershipTier,
       externalOrderId: externalOrderId.trim() || undefined,
@@ -138,7 +142,8 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
       customImage: customImage || undefined,
       customerPhotoFront: customerPhotoFront || undefined,
       customerPhotoSide: customerPhotoSide || undefined,
-      customerPhotoBack: customerPhotoBack || undefined
+      customerPhotoBack: customerPhotoBack || undefined,
+      slipImage: slipImage || undefined
     };
 
     onSave(updatedOrder);
@@ -233,6 +238,17 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                     value={customerSocial}
                     onChange={(e) => setCustomerSocial(e.target.value)}
                     className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-natural-espresso/70 mb-1">LINE User ID (สำหรับเปิดแชท/ส่งแจ้งเตือน)</label>
+                  <input
+                    type="text"
+                    value={lineUserId}
+                    onChange={(e) => setLineUserId(e.target.value)}
+                    placeholder="เช่น U1234567890abcdef..."
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10 font-mono"
                   />
                 </div>
 
@@ -424,6 +440,58 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="col-span-2 pt-2 border-t border-natural-sand/50">
+                  <label className="block text-xs font-semibold text-natural-espresso/70 mb-2 flex items-center space-x-1.5">
+                    <ImageIcon className="h-3.5 w-3.5 text-natural-clay" />
+                    <span>รูปภาพสลิปชำระเงิน (Payment Slip Reference)</span>
+                  </label>
+                  
+                  {slipImage ? (
+                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-2 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <img 
+                          src={slipImage} 
+                          alt="Payment Slip Reference" 
+                          className="h-16 w-12 object-contain bg-white rounded-lg border border-natural-wheat shadow-xs"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div>
+                          <p className="text-xs font-bold text-natural-espresso">แนบรูปสลิปเรียบร้อย ✓</p>
+                          <p className="text-[10px] text-natural-espresso/50">คลิกปุ่มสีแดงเพื่อลบหรือเปลี่ยนรูปภาพ</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSlipImage('')}
+                        className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
+                        title="ลบสลิป"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative border-2 border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-4 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleImageUpload(file, 'slip');
+                          }
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        title="คลิกหรือลากรูปภาพมาวางที่นี่"
+                      />
+                      <div className="flex flex-col items-center justify-center space-y-1">
+                        <UploadCloud className="h-6 w-6 text-natural-clay/75" />
+                        <p className="text-xs font-bold text-natural-espresso">อัปโหลดสลิปเงินโอน/ชำระเงิน</p>
+                        <p className="text-[10px] text-natural-espresso/40 font-medium">คลิก หรือลากไฟล์ภาพมาวาง</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="col-span-2 pt-1">

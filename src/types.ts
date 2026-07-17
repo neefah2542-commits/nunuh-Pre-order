@@ -63,6 +63,8 @@ export interface Order {
   customerCategory?: string;   // ประเภทงาน เช่น IDD, IDH, ทั่วไป
   membershipTier?: 'PRIME' | 'PRIVILEGE' | 'TRADER' | 'MEMBER'; // ประเภทบัตรสมาชิก
   externalOrderId?: string;    // รหัสออเดอร์จากกัน / รหัสออเดอร์อ้างอิง
+  lineUserId?: string;         // รหัส LINE User ID สำหรับติดต่อ
+  slipImage?: string;          // ภาพสลิปโอนเงิน (Base64 string)
 }
 
 export interface CatalogueItem {

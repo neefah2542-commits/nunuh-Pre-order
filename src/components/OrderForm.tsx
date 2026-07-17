@@ -18,6 +18,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerSocial, setCustomerSocial] = useState('');
+  const [lineUserId, setLineUserId] = useState('');
   const [customerCategory, setCustomerCategory] = useState('IDD'); // ค่าเริ่มต้นเช่น IDD, IDH
   const [membershipTier, setMembershipTier] = useState<'PRIME' | 'PRIVILEGE' | 'TRADER' | 'MEMBER'>('MEMBER');
   const [externalOrderId, setExternalOrderId] = useState('');
@@ -62,6 +63,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
   const [customerPhotoSide, setCustomerPhotoSide] = useState('');
   const [customerPhotoBack, setCustomerPhotoBack] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('เงินโอน');
+  const [slipImage, setSlipImage] = useState<string>('');
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -142,6 +144,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
       customerName,
       customerPhone,
       customerSocial: customerSocial || undefined,
+      lineUserId: lineUserId || undefined,
       dressType: finalDressType,
       fabricType: finalFabricType,
       fabricColor: fabricColor || "ตามแบบ",
@@ -165,6 +168,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
       customerPhotoSide: customerPhotoSide || undefined,
       customerPhotoBack: customerPhotoBack || undefined,
       paymentMethod: paymentMethod || 'เงินโอน',
+      slipImage: slipImage || undefined,
       customerCategory: customerCategory || undefined,
       membershipTier: membershipTier,
       externalOrderId: externalOrderId.trim() || undefined,
@@ -207,6 +211,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
       setCustomerPhotoSide('');
       setCustomerPhotoBack('');
       setPaymentMethod('เงินโอน');
+      setSlipImage('');
       setSelectedSize('');
     }, 2000);
   };
@@ -357,6 +362,20 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                       className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-natural-espresso/70 mb-1">LINE User ID (สำหรับเปิดแชท/ส่งข้อความโดยตรง)</label>
+                  <input
+                    type="text"
+                    value={lineUserId}
+                    onChange={(e) => setLineUserId(e.target.value)}
+                    placeholder="เช่น U1234567890abcdef1234567890abcdef"
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20 font-mono"
+                  />
+                  <p className="text-[10px] text-natural-espresso/40 mt-1">
+                    * ได้มาจาก Webhook ตอนลูกค้าแชทคุยกับ LINE Official Account ของร้านคุณค่ะ
+                  </p>
                 </div>
 
 
@@ -1199,6 +1218,63 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   );
                 })}
               </div>
+            </div>
+
+            {/* แนบสลิปชำระเงิน */}
+            <div className="pt-4 border-t border-natural-sand/40">
+              <label className="block text-xs font-bold text-natural-espresso/80 mb-2 flex items-center space-x-1.5">
+                <ImageIcon className="h-3.5 w-3.5 text-natural-clay" />
+                <span>แนบหลักฐานสลิปการโอนเงิน (Payment Slip Upload)</span>
+              </label>
+
+              {slipImage ? (
+                <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-2 flex items-center justify-between animate-fadeIn">
+                  <div className="flex items-center space-x-3">
+                    <img 
+                      src={slipImage} 
+                      alt="Payment Slip Reference" 
+                      className="h-16 w-12 object-contain bg-white rounded-lg border border-natural-wheat shadow-xs"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-natural-espresso">แนบสลิปสำเร็จแล้ว ✓</p>
+                      <p className="text-[10px] text-natural-espresso/50">หลักฐานการชำระเงินนี้จะแนบไปกับออเดอร์</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSlipImage('')}
+                    className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
+                    title="ลบสลิป"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative border-2 border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-4 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setSlipImage(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    title="คลิกหรือลากไฟล์สลิปมาวางที่นี่"
+                  />
+                  <div className="flex flex-col items-center justify-center space-y-1">
+                    <UploadCloud className="h-7 w-7 text-natural-clay/75" />
+                    <p className="text-xs font-bold text-natural-espresso">คลิก หรือลากไฟล์สลิปการโอนเงินมาวางที่นี่</p>
+                    <p className="text-[10px] text-natural-espresso/40 font-medium">รองรับรูปถ่ายสลิปทุกประเภท JPG, PNG, WEBP</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* กล่องแสดงยอดสุทธิหลังหักมัดจำ */}

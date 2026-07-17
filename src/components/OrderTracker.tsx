@@ -27,7 +27,10 @@ import {
   Camera,
   Pencil,
   Globe,
-  Link as LinkIcon
+  Send,
+  ExternalLink,
+  Link as LinkIcon,
+  Image as ImageIcon
 } from 'lucide-react';
 import PrintOrderModal from './PrintOrderModal';
 import EditOrderModal from './EditOrderModal';
@@ -118,6 +121,59 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
     );
 
     window.open('https://chat.line.biz/U7ad64905450d2c18cf2eb27f61c5ea4c/chat', '_blank');
+  };
+
+  const handleOpenLineOaChat = (order: Order) => {
+    if (!order.lineUserId || !order.lineUserId.trim()) {
+      alert("ไม่พบรหัส LINE User ID ของลูกค้าท่านนี้ในระบบค่ะ");
+      return;
+    }
+    const lineOaId = localStorage.getItem('nunuh_line_oa_id') || '@237ayntq';
+    const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
+    const url = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+    window.open(url, '_blank');
+  };
+
+  const handleSendStatusDirectly = async (order: Order) => {
+    if (!order.lineUserId || !order.lineUserId.trim()) {
+      alert("ไม่พบรหัส LINE User ID ของลูกค้าท่านนี้ในระบบค่ะ");
+      return;
+    }
+
+    const currentStatusCfg = STATUS_MAP[order.status];
+    const discountVal = order.discount || 0;
+    const formattedDelivery = new Date(order.deliveryDate).toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    const portalUrl = `${publicUrl}?tab=customer&search=${order.customerPhone}&mode=customer`;
+    const message = `⚜️ อัปเดตสถานะชุดสั่งตัด NUNUH Boutique ⚜️\n\nเรียนคุณ: ${order.customerName}\nรหัสออเดอร์: ${order.orderNumber}\nประเภทชุด: ${order.dressType}\n\n📍 สถานะปัจจุบัน: [${currentStatusCfg.label}]\n➡️ "${currentStatusCfg.description}"\n\n📅 กำหนดส่งมอบ: ${formattedDelivery}\n\nท่านสามารถตรวจสอบข้อมูลสัดส่วนและติดตามความคืบหน้าแบบละเอียดด้วยตนเองได้ที่นี่:\n🔗 ${portalUrl}\n\nขอขอบพระคุณที่เลือกใช้บริการค่ะ ✨`;
+
+    try {
+      const response = await fetch('/api/send-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: order.lineUserId.trim(),
+          message
+        })
+      });
+
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.simulated) {
+          alert(`📲 [Simulated] ส่งข้อความสถานะให้คุณ ${order.customerName} สำเร็จแล้ว (เนื่องจากยังไม่ได้ตั้งค่า LINE_CHANNEL_ACCESS_TOKEN บนเซิร์ฟเวอร์ค่ะ)\n\nข้อความที่ส่ง:\n${message}`);
+        } else {
+          alert(`✅ ส่งข้อความแจ้งสถานะอัปเดตไปยัง LINE ของคุณ ${order.customerName} เรียบร้อยแล้วค่ะ!`);
+        }
+      } else {
+        const errText = await response.text();
+        alert(`❌ ไม่สามารถส่งข้อความได้: ${errText}`);
+      }
+    } catch (err: any) {
+      alert(`❌ เกิดข้อผิดพลาดในการส่งข้อมูล: ${err.message || err}`);
+    }
   };
 
   // การกรองข้อมูล
@@ -805,6 +861,30 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                             </div>
                           )}
 
+                          {order.slipImage && (
+                            <div className="pt-2 border-t border-natural-sand/50">
+                              <p className="text-[10px] text-natural-espresso/45 font-bold mb-1.5 flex items-center">
+                                <ImageIcon className="h-3 w-3 mr-1 text-natural-clay" />
+                                <span>หลักฐานการชำระเงิน (Payment Slip Reference)</span>
+                              </p>
+                              <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/5 max-h-48 group flex justify-start">
+                                <img 
+                                  src={order.slipImage} 
+                                  alt="Payment Slip" 
+                                  className="h-40 w-auto object-contain rounded-lg cursor-zoom-in border border-natural-wheat"
+                                  referrerPolicy="no-referrer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const imgWindow = window.open();
+                                    if (imgWindow) {
+                                      imgWindow.document.write(`<img src="${order.slipImage}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
                           <div className="pt-2 flex flex-col sm:flex-row gap-2">
                             <button
                               type="button"
@@ -849,6 +929,28 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                               className="bg-natural-sand hover:bg-natural-wheat/80 text-natural-espresso text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer border border-natural-wheat/50 flex-1"
                             >
                               <span>คัดลอกข้อความ 📋</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenLineOaChat(order);
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              <span>แชท LINE OA 🟢</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSendStatusDirectly(order);
+                              }}
+                              className="bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              <span>ส่งสถานะเข้า LINE 🚀</span>
                             </button>
                           </div>
                         </div>

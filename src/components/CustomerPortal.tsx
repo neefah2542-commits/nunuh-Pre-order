@@ -827,6 +827,25 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
                                       </div>
                                     </div>
                                   )}
+                                  {order.slipImage && (
+                                    <div className="mt-2.5 pt-2.5 border-t border-natural-sand/60">
+                                      <p className="text-[10px] text-natural-espresso/45 font-bold mb-1 uppercase tracking-wider">หลักฐานการชำระเงิน (สลิปโอนเงิน)</p>
+                                      <div className="relative rounded-lg overflow-hidden border border-natural-wheat h-28 bg-natural-sand/5 flex items-center justify-center">
+                                        <img 
+                                          src={order.slipImage} 
+                                          alt="Payment Slip" 
+                                          className="h-full object-contain cursor-zoom-in"
+                                          referrerPolicy="no-referrer"
+                                          onClick={() => {
+                                            const imgWindow = window.open();
+                                            if (imgWindow) {
+                                              imgWindow.document.write(`<img src="${order.slipImage}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
