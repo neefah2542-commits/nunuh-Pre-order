@@ -107,6 +107,55 @@ app.post("/api/orders", (req: any, res) => {
   }
 });
 
+// API Endpoint to send status push message directly to a user
+app.post("/api/send-status", async (req: any, res) => {
+  const { userId, message } = req.body;
+  const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || "";
+
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+  if (!message) {
+    return res.status(400).json({ error: "message is required" });
+  }
+
+  if (!LINE_CHANNEL_ACCESS_TOKEN) {
+    console.warn("⚠️ LINE_CHANNEL_ACCESS_TOKEN not set, simulating push message sending.");
+    return res.json({ success: true, simulated: true, message: "LINE_CHANNEL_ACCESS_TOKEN not set. Simulating success." });
+  }
+
+  try {
+    const response = await fetch("https://api.line.me/v2/bot/message/push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+      },
+      body: JSON.stringify({
+        to: userId,
+        messages: [
+          {
+            type: "text",
+            text: message
+          }
+        ]
+      })
+    });
+
+    if (response.ok) {
+      console.log(`✅ Push message sent successfully to User ID: ${userId}`);
+      return res.json({ success: true });
+    } else {
+      const errText = await response.text();
+      console.error(`❌ Failed to send push message to LINE: ${errText}`);
+      return res.status(response.status).json({ error: errText });
+    }
+  } catch (err: any) {
+    console.error("❌ Error sending push message:", err);
+    return res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
 // LINE Webhook Endpoint
 app.post("/api/webhook/line", async (req: any, res) => {
   const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || "";
