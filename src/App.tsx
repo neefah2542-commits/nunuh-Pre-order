@@ -33,6 +33,14 @@ export default function App() {
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([]);
   const [activeTab, setActiveTab] = useState<string>('tracker'); // tracker, orderForm, calendar, catalogue
   const [isCustomerMode, setIsCustomerMode] = useState<boolean>(false);
+  const [theme, setTheme] = useState<string>(() => {
+    return localStorage.getItem('nunuh_selected_theme') || 'sand';
+  });
+
+  // Save selected theme to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('nunuh_selected_theme', theme);
+  }, [theme]);
 
   // ฟังก์ชันผสานข้อมูลออเดอร์โดยไม่ให้ข้อมูลทับกันหรือสูญหาย (Smart Order Merge)
   const mergeOrders = (current: Order[], incoming: Order[]): Order[] => {
@@ -312,10 +320,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-natural-cream text-natural-espresso pb-16 font-sans">
+    <div className={`min-h-screen bg-natural-cream text-natural-espresso pb-16 font-sans transition-colors duration-300 ${theme === 'sand' ? '' : `theme-${theme}`}`}>
       
       {/* 1. BRAND HERO HEADER */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-natural-wheat sticky top-0 z-50 shadow-xs">
+      <header className="bg-white/80 backdrop-blur-md border-b border-natural-wheat sticky top-0 z-50 shadow-xs no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             
@@ -398,6 +406,75 @@ export default function App() {
                 </button>
               </nav>
             )}
+
+            {/* Elegant Theme Switcher */}
+            <div className="flex items-center space-x-2 no-print">
+              <span className="text-[10px] uppercase tracking-widest text-natural-espresso/40 font-bold hidden md:inline-block">
+                ธีมร้าน:
+              </span>
+              <div className="flex items-center space-x-1 bg-natural-sand/50 p-1 rounded-xl border border-natural-wheat/40">
+                <button
+                  type="button"
+                  onClick={() => setTheme('sand')}
+                  className={`w-6 h-6 rounded-lg transition-all cursor-pointer relative flex items-center justify-center bg-[#FAF6F0] border ${
+                    theme === 'sand'
+                      ? 'border-natural-clay ring-2 ring-natural-clay/20 shadow-xs scale-105'
+                      : 'border-natural-wheat/40 hover:border-natural-clay/30'
+                  }`}
+                  title="ธีมสีอบอุ่นลินิน (Atelier Sand - Default)"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#B96248]" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('lavender')}
+                  className={`w-6 h-6 rounded-lg transition-all cursor-pointer relative flex items-center justify-center bg-[#F9F5FB] border ${
+                    theme === 'lavender'
+                      ? 'border-natural-clay ring-2 ring-natural-clay/20 shadow-xs scale-105'
+                      : 'border-natural-wheat/40 hover:border-natural-clay/30'
+                  }`}
+                  title="ธีมสีม่วงราชสำนัก (Royal Lavender)"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#7A5299]" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('sage')}
+                  className={`w-6 h-6 rounded-lg transition-all cursor-pointer relative flex items-center justify-center bg-[#F5F8F6] border ${
+                    theme === 'sage'
+                      ? 'border-natural-clay ring-2 ring-natural-clay/20 shadow-xs scale-105'
+                      : 'border-natural-wheat/40 hover:border-natural-clay/30'
+                  }`}
+                  title="ธีมสีเขียวใบเซจ (Botanical Sage)"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#3B7A57]" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('crimson')}
+                  className={`w-6 h-6 rounded-lg transition-all cursor-pointer relative flex items-center justify-center bg-[#FAF5F5] border ${
+                    theme === 'crimson'
+                      ? 'border-natural-clay ring-2 ring-natural-clay/20 shadow-xs scale-105'
+                      : 'border-natural-wheat/40 hover:border-natural-clay/30'
+                  }`}
+                  title="ธีมสีแดงกำมะหยี่หรู (Crimson Velvet)"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#9E2A2B]" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('pink')}
+                  className={`w-6 h-6 rounded-lg transition-all cursor-pointer relative flex items-center justify-center bg-[#FCF5F7] border ${
+                    theme === 'pink'
+                      ? 'border-natural-clay ring-2 ring-natural-clay/20 shadow-xs scale-105'
+                      : 'border-natural-wheat/40 hover:border-natural-clay/30'
+                  }`}
+                  title="ธีมสีชมพูพาสเทลหรู (Royal Pink)"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#D15E82]" />
+                </button>
+              </div>
+            </div>
 
           </div>
         </div>

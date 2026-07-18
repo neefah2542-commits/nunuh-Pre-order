@@ -24,6 +24,59 @@ body {
   color: var(--color-natural-espresso);
 }
 
+/* Theme overrides */
+.theme-lavender {
+  --color-natural-cream: #F9F5FB;
+  --color-natural-sand: #EFE4F5;
+  --color-natural-wheat: #DDD0E6;
+  --color-natural-clay: #7A5299;
+  --color-natural-clay-dark: #5C367C;
+  --color-natural-sage: #527E99;
+  --color-natural-sage-dark: #3B627A;
+  --color-natural-ochre: #D4A35C;
+  --color-natural-espresso: #2B2030;
+  --color-natural-espresso-dark: #1C1321;
+}
+
+.theme-sage {
+  --color-natural-cream: #F5F8F6;
+  --color-natural-sand: #E3EDE7;
+  --color-natural-wheat: #CDDCD2;
+  --color-natural-clay: #3B7A57;
+  --color-natural-clay-dark: #2D5D42;
+  --color-natural-sage: #8B6D75;
+  --color-natural-sage-dark: #6F525A;
+  --color-natural-ochre: #C59E5B;
+  --color-natural-espresso: #1F2622;
+  --color-natural-espresso-dark: #141A17;
+}
+
+.theme-crimson {
+  --color-natural-cream: #FAF5F5;
+  --color-natural-sand: #F3E6E6;
+  --color-natural-wheat: #E6CECE;
+  --color-natural-clay: #9E2A2B;
+  --color-natural-clay-dark: #7E1E20;
+  --color-natural-sage: #4F6D7A;
+  --color-natural-sage-dark: #3A505C;
+  --color-natural-ochre: #CFA851;
+  --color-natural-espresso: #281C1C;
+  --color-natural-espresso-dark: #1D1212;
+}
+
+.theme-pink {
+  --color-natural-cream: #FCF5F7;
+  --color-natural-sand: #F7E5EC;
+  --color-natural-wheat: #ECD0D8;
+  --color-natural-clay: #D15E82;
+  --color-natural-clay-dark: #AF4263;
+  --color-natural-sage: #788E8B;
+  --color-natural-sage-dark: #526A6D;
+  --color-natural-ochre: #DFB593;
+  --color-natural-espresso: #301A22;
+  --color-natural-espresso-dark: #200E13;
+}
+
 /* Custom transitions and premium warm-toned UI touches */
 ::-webkit-scrollbar {
   width: 6px;

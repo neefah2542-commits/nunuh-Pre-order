@@ -117,6 +117,50 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
     };
   };
 
+  const getLineDetails = (order: Order) => {
+    const rawUserId = order.lineUserId?.trim();
+    const socialInfo = getSocialInfo(order.customerSocial);
+    
+    // Check if rawUserId is a real LINE User ID (starts with U and followed by 32 alphanumeric chars)
+    const isRealUserId = !!rawUserId && /^U[0-9a-zA-Z]{32}$/.test(rawUserId);
+    
+    let hasLineUserId = false;
+    let lineUserId = '';
+    
+    let hasPersonalLineId = false;
+    let personalLineId = '';
+    
+    if (isRealUserId) {
+      hasLineUserId = true;
+      lineUserId = rawUserId!;
+    } else if (rawUserId && rawUserId.length > 0) {
+      // If the field is filled but is not a real LINE User ID, it is a personal LINE ID!
+      hasPersonalLineId = true;
+      personalLineId = rawUserId.replace(/^@/, '');
+    }
+    
+    if (socialInfo && socialInfo.type === 'line' && socialInfo.cleanId) {
+      const isSocialRealUserId = /^U[0-9a-zA-Z]{32}$/.test(socialInfo.cleanId);
+      if (isSocialRealUserId) {
+        if (!hasLineUserId) {
+          hasLineUserId = true;
+          lineUserId = socialInfo.cleanId;
+          hasPersonalLineId = false; // cleanId is actually a LINE User ID, not a personal ID
+        }
+      } else if (!hasLineUserId && !hasPersonalLineId) {
+        hasPersonalLineId = true;
+        personalLineId = socialInfo.cleanId;
+      }
+    }
+    
+    return {
+      hasLineUserId,
+      lineUserId,
+      hasPersonalLineId,
+      personalLineId
+    };
+  };
+
   const handleDirectLineChat = (order: Order) => {
     const currentStatusCfg = STATUS_MAP[order.status];
     const formattedDelivery = new Date(order.deliveryDate).toLocaleDateString('th-TH', {
@@ -134,54 +178,46 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
       console.error('Failed to copy text: ', err);
     }
 
-    const socialInfo = getSocialInfo(order.customerSocial);
-    const hasLineUserId = !!(order.lineUserId && order.lineUserId.trim());
-    const hasPersonalLineId = !!(socialInfo && socialInfo.type === 'line' && socialInfo.cleanId);
+    const { hasLineUserId, lineUserId } = getLineDetails(order);
 
     if (hasLineUserId) {
-      // 2. ถ้ามี LINE User ID ของระบบ LINE OA ให้เปิดห้องแชทลูกค้ารายนั้นโดยตรงบน LINE OA Manager ทันที
+      // ถ้ามี LINE User ID ของระบบ LINE OA ให้เปิดห้องแชทลูกค้ารายนั้นโดยตรงบน LINE OA Manager ทันที
       const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
-      const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+      const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${lineUserId}`;
       
       alert(
         `📋 คัดลอกข้อความและสถานะอัปเดตของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
-        `ระบบจะนำคุณไปยังแผงควบคุมห้องแชทลูกค้าคนนี้บน LINE OA โดยตรง ทราบแล้วกดตกลงเพื่อเปิดแชทและนำข้อความไปวางส่งคุยได้เลยค่ะ 💬`
+        `ระบบจะนำคุณไปยังห้องแชทของลูกค้ารายนี้โดยตรงในระบบ LINE OA Manager ทราบแล้วกดตกลงเพื่อเปิดแชทและนำข้อความไปวาง (Paste) ส่งคุยได้เลยค่ะ 💬`
       );
       window.open(directOaUrl, '_blank');
-    } else if (hasPersonalLineId) {
-      // 3. ถ้าไม่มี LINE User ID แต่มี ID LINE ส่วนตัวของลูกค้า ให้เปิดลิงก์แชท LINE ส่วนตัวโดยตรง
-      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
+    } else {
+      // ถ้าไม่มี LINE User ID หรือเป็นกรณีอื่นๆ ให้เปิดแผงควบคุมหลัก LINE OA แล้วแนะนำให้แอดมินค้นหาชื่อ
+      const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
+      const generalOaUrl = lineOaChatUrl || `https://manager.line.biz/account/${cleanId}/chat/`;
       
       alert(
         `📋 คัดลอกข้อความและสถานะอัปเดตของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
-        `ระบบจะเปิดลิงก์สำหรับแชทไลน์ส่วนตัวของลูกค้าคนนี้โดยตรง ทราบแล้วกดตกลงเพื่อเปิดแชทและนำข้อความไปวางส่งคุยได้เลยค่ะ 💬`
+        `เนื่องจากออเดอร์นี้ยังไม่ได้รับเชื่อมโยงข้อมูล LINE User ID ล่าสุดของลูกค้า (รหัสขึ้นต้นด้วย U...) ทำให้ระบบไม่สามารถนำทางไปยังหน้าห้องแชทของลูกค้ารายนี้โดยตรงได้\n\n` +
+        `💡 วิธีเชื่อมลิงก์ไปห้องแชทของลูกค้าโดยตรงทันทีในครั้งหน้า:\n` +
+        `1. ค้นหาชื่อแชท คุณ "${order.customerName}" ในหน้าแผงควบคุมหลัก LINE OA ของร้านคุณที่กำลังจะเปิดขึ้นนี้\n` +
+        `2. สังเกตแถบลิงก์ (URL Address) ของเบราว์เซอร์ขณะคุยกับลูกค้าคนนี้ จะมีรหัสผู้ใช้แสดงอยู่หลังคำว่า /user/ (เช่น Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)\n` +
+        `3. คัดลอกรหัสนั้นมาใส่ในช่อง "LINE User ID" ในหน้าแก้ไขออเดอร์นี้ได้เลยค่ะ! (หรือรอให้ลูกค้าทักเข้ามาสอบถามสถานะด้วยเบอร์โทร/เลขที่ออเดอร์ผ่านแชทก่อน ระบบบอทจะบันทึกให้อัตโนมัติค่ะ)\n\n` +
+        `กรุณากดตกลงเพื่อเปิดแผงแชทของร้านคุณ และกดค้นหาชื่อลูกค้าเพื่อนำข้อความที่คัดลอกไว้ไปวางส่งต่อได้ทันทีค่ะ 💬`
       );
-      window.open(personalUrl, '_blank');
-    } else {
-      // 4. ถ้าไม่มีข้อมูลเชื่อมต่อเฉพาะตัว ให้เปิดหน้าแชทหลัก และแนะนำให้แอดมินค้นหาแชทด้วยชื่อลูกค้า
-      alert(
-        `📋 คัดลอกข้อความอัปเดตสถานะของ คุณ ${order.customerName} แล้วค่ะ!\n\n` +
-        `เนื่องจากลูกค้าท่านนี้ยังไม่มีประวัติแชทเชื่อมต่อกับระบบอัตโนมัติ (หรือไม่มี ID ไลน์ระบุไว้)\n` +
-        `ให้แอดมินค้นหาชื่อ "${order.customerName}" ในช่องค้นหาแชทของร้านบนหน้าแผงแชทหลักที่จะเปิดขึ้นนี้ เพื่อคลิกห้องแชทและนำข้อความวางส่งคุยได้เลยค่ะ 💬`
-      );
-      window.open(lineOaChatUrl || 'https://chat.line.biz/', '_blank');
+      window.open(generalOaUrl, '_blank');
     }
   };
 
   const handleOpenLineOaChat = (order: Order) => {
-    const socialInfo = getSocialInfo(order.customerSocial);
-    const hasLineUserId = !!(order.lineUserId && order.lineUserId.trim());
-    const hasPersonalLineId = !!(socialInfo && socialInfo.type === 'line' && socialInfo.cleanId);
+    const { hasLineUserId, lineUserId } = getLineDetails(order);
 
+    const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
     if (hasLineUserId) {
-      const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
-      const url = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+      const url = `https://manager.line.biz/account/${cleanId}/chat/user/${lineUserId}`;
       window.open(url, '_blank');
-    } else if (hasPersonalLineId) {
-      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
-      window.open(personalUrl, '_blank');
     } else {
-      window.open(lineOaChatUrl || 'https://chat.line.biz/', '_blank');
+      const generalOaUrl = lineOaChatUrl || `https://manager.line.biz/account/${cleanId}/chat/`;
+      window.open(generalOaUrl, '_blank');
     }
   };
 
@@ -203,32 +239,30 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
       console.error('Failed to copy text: ', err);
     }
 
-    const socialInfo = getSocialInfo(order.customerSocial);
-    const hasLineUserId = !!(order.lineUserId && order.lineUserId.trim());
-    const hasPersonalLineId = !!(socialInfo && socialInfo.type === 'line' && socialInfo.cleanId);
+    const { hasLineUserId, lineUserId } = getLineDetails(order);
 
     if (hasLineUserId) {
-      // 1. กรณีมี LINE User ID: พยายามส่งอัตโนมัติผ่าน API บอทก่อน
+      // 1. กรณีเป็น LINE User ID จริง: พยายามส่งอัตโนมัติผ่าน API บอทก่อน
       try {
         const response = await fetch('/api/send-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: order.lineUserId.trim(),
+            userId: lineUserId,
             message
           })
         });
 
         const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
-        const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+        const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${lineUserId}`;
 
         if (response.ok) {
           const resData = await response.json();
           if (resData.simulated) {
             alert(
               `📲 [โหมดจำลอง] คัดลอกข้อความสถานะแล้ว!\n` +
-              `เนื่องจากยังไม่ได้เปิดระบบเชื่อมต่อบอท API สมบูรณ์ ระบบได้คัดลอกข้อความให้คุณแล้วค่ะ\n` +
-              `กดตกลงเพื่อเปิดหน้าแชทของลูกค้ารายนี้บน LINE OA เพื่อวางส่งได้ทันทีเลยค่ะ 💬`
+              `เนื่องจากยังไม่ได้เปิดระบบเชื่อมต่อบอท API สมบูรณ์ ระบบได้คัดลอกข้อความแจ้งสถานะเรียบร้อยแล้วค่ะ\n` +
+              `เมื่อกดตกลง ระบบจะเปิดหน้าห้องแชทของลูกค้ารายนี้ในระบบ LINE OA Manager ให้คุณกดวาง (Paste) ส่งข้อความได้ทันทีเลยค่ะ 💬`
             );
             window.open(directOaUrl, '_blank');
           } else {
@@ -238,38 +272,38 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
           // หาก API เกิดความผิดพลาด ให้คัดลอกและเปิดหน้าแชทของลูกค้ารายนั้นโดยตรงเพื่อให้แอดมินกดวางส่งเอง
           alert(
             `📋 คัดลอกข้อความสถานะเรียบร้อยแล้วค่ะ!\n` +
-            `(การส่งอัตโนมัติผ่านระบบหลังบ้านแจ้งสถานะ: "${await response.text()}")\n` +
-            `ระบบจะเปิดหน้าห้องแชทลูกค้าโดยตรงใน LINE OA ให้คุณนำข้อความไปวาง (Paste) และส่งได้ทันทีเลยค่ะ 💬`
+            `(ระบบการแจ้งเตือนอัตโนมัติแจ้งว่า: "ไม่มีการตั้งค่า LINE Messaging API")\n` +
+            `ระบบจะนำท่านไปยังห้องแชทลูกค้าโดยตรงในระบบ LINE OA Manager เพื่อแชทและนำข้อความวางส่งคุยต่อได้ทันทีค่ะ 💬`
           );
           window.open(directOaUrl, '_blank');
         }
       } catch (err: any) {
         // หากมี error ใดๆ เช่น เชื่อมต่อไม่ได้ ให้พาไปหน้าแชทตรงพร้อมสถานะที่ก๊อปปี้แล้ว
         const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
-        const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+        const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${lineUserId}`;
         alert(
           `📋 คัดลอกข้อความสถานะแล้ว!\n` +
-          `(ระบบหลังบ้านติดข้อขัดข้องชั่วคราว: ${err.message || err})\n` +
-          `กดตกลงเพื่อเปิดหน้าห้องแชทตรงใน LINE OA แล้วกดวางข้อความส่งคุยต่อได้ทันทีเลยค่ะ 💬`
+          `(ระบบการแจ้งเตือนอัตโนมัติติดขัดชั่วคราว: ${err.message || err})\n` +
+          `กดตกลงเพื่อเปิดหน้าห้องแชทลูกค้าใน LINE OA Manager แล้วกดวางข้อความส่งคุยต่อได้ทันทีเลยค่ะ 💬`
         );
         window.open(directOaUrl, '_blank');
       }
-    } else if (hasPersonalLineId) {
-      // 2. กรณีไม่มี LINE User ID แต่มี ID ไลน์ส่วนตัวของลูกค้า
-      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
+    } else {
+      // 2. กรณีไม่มี LINE User ID: คัดลอกข้อความและเปิดหน้าแชทหลัก LINE OA เพื่อให้แอดมินใช้ช่องค้นหาชื่อหาแชทและกดวางส่ง
+      const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
+      const generalOaUrl = lineOaChatUrl || `https://manager.line.biz/account/${cleanId}/chat/`;
+
       alert(
         `📋 คัดลอกข้อความสถานะอัปเดตของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
-        `ระบบจะนำคุณไปยังห้องแชท LINE ส่วนตัวของลูกค้าคนนี้โดยตรง คุณสามารถกดวาง (Paste) ข้อความเพื่อส่งได้ทันทีเลยค่ะ 🟢`
+        `เนื่องจากออเดอร์นี้ยังไม่ได้เชื่อมต่อข้อมูล LINE User ID ในฐานข้อมูล (รหัสขึ้นต้นด้วย U...)\n` +
+        `ระบบจึงคัดลอกข้อความสถานะเก็บลงคลิปบอร์ดไว้ให้แล้ว และนำท่านไปยังหน้าแชทหลักของ LINE OA เพื่อความสะดวกในการทำงานค่ะ\n\n` +
+        `💡 แนะนำวิธีเปิดลิงก์ห้องแชทของลูกค้าโดยตรงทันทีในครั้งหน้า:\n` +
+        `1. ค้นหาชื่อ คุณ "${order.customerName}" ในแผงแชทของทางร้านเพื่อเปิดห้องแชทบนเบราว์เซอร์\n` +
+        `2. สังเกตแถบลิงก์ (URL Address) ด้านบน จะมีรหัสผู้ใช้ขึ้นต้นด้วย U ปรากฏอยู่ เช่น Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n` +
+        `3. นำรหัสดังกล่าวมาป้อนใส่ในช่อง "LINE User ID" ในหน้าแก้ไขออเดอร์นี้ค่ะ และกดบันทึกเพื่อใช้ลิงก์ตรงและระบบแจ้งเตือนแชทได้ทันทีค่ะ!\n\n` +
+        `กรุณากดตกลงเพื่อเปิดแผงแชท และวาง (Paste) ส่งข้อความแจ้งสถานะได้ทันทีค่ะ 💬`
       );
-      window.open(personalUrl, '_blank');
-    } else {
-      // 3. กรณีไม่มีทั้งสองอย่าง
-      alert(
-        `📋 คัดลอกข้อความสถานะของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
-        `เนื่องจากออเดอร์นี้ไม่มีการระบุข้อมูลช่องทางเชื่อมต่อโดยตรง\n` +
-        `ให้แอดมินค้นหาแชทชื่อ "${order.customerName}" บนหน้าแชท LINE OA ของร้านคุณที่กำลังจะเปิดขึ้นนี้ เพื่อคลิกและวางข้อความส่งได้เลยค่ะ 💬`
-      );
-      window.open(lineOaChatUrl || 'https://chat.line.biz/', '_blank');
+      window.open(generalOaUrl, '_blank');
     }
   };
 
@@ -1094,40 +1128,18 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                               <Printer className="h-3.5 w-3.5" />
                               <span>พิมพ์ใบออเดอร์ 🖨️</span>
                             </button>
-                            {(() => {
-                              const socialInfo = getSocialInfo(order.customerSocial);
-                              if (socialInfo && socialInfo.type === 'line' && socialInfo.cleanId) {
-                                return (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
-                                      window.open(personalUrl, '_blank');
-                                    }}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
-                                    title="เปิดหน้าแชทไลน์ส่วนตัวของลูกค้าคนนี้โดยตรง"
-                                  >
-                                    <MessageSquare className="h-3.5 w-3.5" />
-                                    <span>แชท LINE ลูกค้าโดยตรง 🟢</span>
-                                  </button>
-                                );
-                              }
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDirectLineChat(order);
-                                  }}
-                                  className="bg-[#06C755] hover:bg-[#05b34c] text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
-                                  title="คัดลอกข้อความแจ้งสถานะและเปิดหน้าแผงแชท LINE OA ของร้านคุณ"
-                                >
-                                  <MessageSquare className="h-3.5 w-3.5" />
-                                  <span>คุย LINE (แอดมิน) 💬</span>
-                                </button>
-                              );
-                            })()}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDirectLineChat(order);
+                              }}
+                              className="bg-[#06C755] hover:bg-[#05b34c] text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
+                              title="คัดลอกข้อความแจ้งสถานะและเปิดหน้าแผงแชท LINE OA ของร้านคุณ"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              <span>คุย LINE (แอดมิน) 💬</span>
+                            </button>
                             <button
                               type="button"
                               onClick={(e) => {

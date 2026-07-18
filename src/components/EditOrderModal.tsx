@@ -250,6 +250,11 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                     placeholder="เช่น U1234567890abcdef..."
                     className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10 font-mono"
                   />
+                  <p className="text-[10px] text-natural-espresso/50 mt-1.5 leading-relaxed bg-natural-sand/30 p-2 rounded-lg border border-natural-wheat/30">
+                    💡 <strong>รหัสนี้คืออะไร?</strong> คือรหัสเฉพาะใน LINE สำหรับลิงก์ไปหน้าแชทคนนี้โดยตรง คุณสามารถได้รหัสนี้มา 2 วิธี:<br />
+                    1. <strong>อัตโนมัติ:</strong> เพียงให้ลูกค้าแชทพิมพ์เบอร์โทรหรือเลขที่ออเดอร์ใน LINE ร้าน ระบบจะดึงรหัสนี้มาบันทึกให้เองทันที!<br />
+                    2. <strong>คัดลอกมาวางเอง:</strong> เมื่อคุณคุยกับลูกค้าบนเบราว์เซอร์ ให้ก๊อปรหัสตัว "U" หลังคำว่า <code className="bg-white/80 px-1 font-mono text-[9px]">/user/</code> ในช่อง Address bar ด้านบน มาวางที่นี่ได้เลยค่ะ
+                  </p>
                 </div>
 
 
