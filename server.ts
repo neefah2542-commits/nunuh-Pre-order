@@ -214,6 +214,24 @@ app.post("/api/webhook/line", async (req: any, res) => {
         );
       });
 
+      // Save lineUserId to matched orders so admin can message/open chat directly later
+      if (matchedOrders.length > 0 && event.source?.userId) {
+        let updatedAny = false;
+        const updatedOrders = orders.map((o: any) => {
+          if (matchedOrders.some((mo: any) => mo.id === o.id)) {
+            if (o.lineUserId !== event.source.userId) {
+              o.lineUserId = event.source.userId;
+              updatedAny = true;
+            }
+          }
+          return o;
+        });
+        if (updatedAny) {
+          writeOrdersOnServer(updatedOrders);
+          console.log(`[Webhook] Auto-linked lineUserId: ${event.source.userId} to matched orders.`);
+        }
+      }
+
       // 3. Formulate Rich Response
       let replyMessage = "";
       const baseAppUrl = lastKnownPublicUrl || process.env.PUBLIC_APP_URL || `https://${req.get('host')}`;

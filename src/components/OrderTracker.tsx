@@ -56,6 +56,14 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
   });
   const [showUrlSettings, setShowUrlSettings] = useState(false);
 
+  const [lineOaId, setLineOaId] = useState(() => {
+    return localStorage.getItem('nunuh_line_oa_id') || '@237ayntq';
+  });
+
+  const [lineOaChatUrl, setLineOaChatUrl] = useState(() => {
+    return localStorage.getItem('nunuh_line_oa_chat_url') || 'https://chat.line.biz/';
+  });
+
   const handleSavePublicUrl = (url: string) => {
     let cleanUrl = url.trim();
     if (cleanUrl.endsWith('/')) {
@@ -63,6 +71,18 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
     }
     setPublicUrl(cleanUrl);
     localStorage.setItem('nunuh_public_url', cleanUrl);
+  };
+
+  const handleSaveLineOaId = (id: string) => {
+    const clean = id.trim();
+    setLineOaId(clean);
+    localStorage.setItem('nunuh_line_oa_id', clean);
+  };
+
+  const handleSaveLineOaChatUrl = (url: string) => {
+    const clean = url.trim();
+    setLineOaChatUrl(clean);
+    localStorage.setItem('nunuh_line_oa_chat_url', clean);
   };
 
   const getSocialInfo = (socialStr?: string) => {
@@ -107,39 +127,65 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
     const portalUrl = `${publicUrl}?tab=customer&search=${order.customerPhone}&mode=customer`;
     const message = `⚜️ อัปเดตสถานะชุดสั่งตัด NUNUH Boutique ⚜️\n\nเรียนคุณ: ${order.customerName}\nรหัสออเดอร์: ${order.orderNumber}\nประเภทชุด: ${order.dressType}\n\n📍 สถานะปัจจุบัน: [${currentStatusCfg.label}]\n➡️ "${currentStatusCfg.description}"\n\n📅 กำหนดส่งมอบ: ${formattedDelivery}\n\nท่านสามารถตรวจสอบข้อมูลสัดส่วนและติดตามความคืบหน้าแบบละเอียดด้วยตนเองได้ที่นี่:\n🔗 ${portalUrl}\n\nขอขอบพระคุณที่เลือกใช้บริการค่ะ ✨`;
 
+    // 1. คัดลอกข้อความลง Clipboard อัตโนมัติ เพื่อให้แอดมินนำไปวางกดส่งได้ทันที
     try {
       navigator.clipboard.writeText(message);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
 
-    alert(
-      `📲 คัดลอกข้อมูลและข้อความอัปเดตสถานะของ คุณ ${order.customerName} เรียบร้อยแล้ว!\n\n` +
-      `• ลิงก์เช็คสถานะลูกค้า: "${portalUrl}"\n` +
-      `• ชื่อลูกค้าสำหรับค้นหาแชท: "${order.customerName}"\n\n` +
-      `เมื่อหน้าต่างใหม่เปิดขึ้น ให้แอดมินใช้คำว่า "${order.customerName}" ในช่องค้นหาแชท LINE Official ของร้านเพื่อวางข้อความและคุยได้ทันทีเลยค่ะ 💬`
-    );
+    const socialInfo = getSocialInfo(order.customerSocial);
+    const hasLineUserId = !!(order.lineUserId && order.lineUserId.trim());
+    const hasPersonalLineId = !!(socialInfo && socialInfo.type === 'line' && socialInfo.cleanId);
 
-    window.open('https://chat.line.biz/U7ad64905450d2c18cf2eb27f61c5ea4c/chat', '_blank');
+    if (hasLineUserId) {
+      // 2. ถ้ามี LINE User ID ของระบบ LINE OA ให้เปิดห้องแชทลูกค้ารายนั้นโดยตรงบน LINE OA Manager ทันที
+      const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
+      const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+      
+      alert(
+        `📋 คัดลอกข้อความและสถานะอัปเดตของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
+        `ระบบจะนำคุณไปยังแผงควบคุมห้องแชทลูกค้าคนนี้บน LINE OA โดยตรง ทราบแล้วกดตกลงเพื่อเปิดแชทและนำข้อความไปวางส่งคุยได้เลยค่ะ 💬`
+      );
+      window.open(directOaUrl, '_blank');
+    } else if (hasPersonalLineId) {
+      // 3. ถ้าไม่มี LINE User ID แต่มี ID LINE ส่วนตัวของลูกค้า ให้เปิดลิงก์แชท LINE ส่วนตัวโดยตรง
+      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
+      
+      alert(
+        `📋 คัดลอกข้อความและสถานะอัปเดตของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
+        `ระบบจะเปิดลิงก์สำหรับแชทไลน์ส่วนตัวของลูกค้าคนนี้โดยตรง ทราบแล้วกดตกลงเพื่อเปิดแชทและนำข้อความไปวางส่งคุยได้เลยค่ะ 💬`
+      );
+      window.open(personalUrl, '_blank');
+    } else {
+      // 4. ถ้าไม่มีข้อมูลเชื่อมต่อเฉพาะตัว ให้เปิดหน้าแชทหลัก และแนะนำให้แอดมินค้นหาแชทด้วยชื่อลูกค้า
+      alert(
+        `📋 คัดลอกข้อความอัปเดตสถานะของ คุณ ${order.customerName} แล้วค่ะ!\n\n` +
+        `เนื่องจากลูกค้าท่านนี้ยังไม่มีประวัติแชทเชื่อมต่อกับระบบอัตโนมัติ (หรือไม่มี ID ไลน์ระบุไว้)\n` +
+        `ให้แอดมินค้นหาชื่อ "${order.customerName}" ในช่องค้นหาแชทของร้านบนหน้าแผงแชทหลักที่จะเปิดขึ้นนี้ เพื่อคลิกห้องแชทและนำข้อความวางส่งคุยได้เลยค่ะ 💬`
+      );
+      window.open(lineOaChatUrl || 'https://chat.line.biz/', '_blank');
+    }
   };
 
   const handleOpenLineOaChat = (order: Order) => {
-    if (!order.lineUserId || !order.lineUserId.trim()) {
-      alert("ไม่พบรหัส LINE User ID ของลูกค้าท่านนี้ในระบบค่ะ");
-      return;
+    const socialInfo = getSocialInfo(order.customerSocial);
+    const hasLineUserId = !!(order.lineUserId && order.lineUserId.trim());
+    const hasPersonalLineId = !!(socialInfo && socialInfo.type === 'line' && socialInfo.cleanId);
+
+    if (hasLineUserId) {
+      const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
+      const url = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+      window.open(url, '_blank');
+    } else if (hasPersonalLineId) {
+      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
+      window.open(personalUrl, '_blank');
+    } else {
+      window.open(lineOaChatUrl || 'https://chat.line.biz/', '_blank');
     }
-    const lineOaId = localStorage.getItem('nunuh_line_oa_id') || '@237ayntq';
-    const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
-    const url = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
-    window.open(url, '_blank');
   };
 
   const handleSendStatusDirectly = async (order: Order) => {
-    if (!order.lineUserId || !order.lineUserId.trim()) {
-      alert("ไม่พบรหัส LINE User ID ของลูกค้าท่านนี้ในระบบค่ะ");
-      return;
-    }
-
     const currentStatusCfg = STATUS_MAP[order.status];
     const discountVal = order.discount || 0;
     const formattedDelivery = new Date(order.deliveryDate).toLocaleDateString('th-TH', {
@@ -150,29 +196,80 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
     const portalUrl = `${publicUrl}?tab=customer&search=${order.customerPhone}&mode=customer`;
     const message = `⚜️ อัปเดตสถานะชุดสั่งตัด NUNUH Boutique ⚜️\n\nเรียนคุณ: ${order.customerName}\nรหัสออเดอร์: ${order.orderNumber}\nประเภทชุด: ${order.dressType}\n\n📍 สถานะปัจจุบัน: [${currentStatusCfg.label}]\n➡️ "${currentStatusCfg.description}"\n\n📅 กำหนดส่งมอบ: ${formattedDelivery}\n\nท่านสามารถตรวจสอบข้อมูลสัดส่วนและติดตามความคืบหน้าแบบละเอียดด้วยตนเองได้ที่นี่:\n🔗 ${portalUrl}\n\nขอขอบพระคุณที่เลือกใช้บริการค่ะ ✨`;
 
+    // คัดลอกลงคลิปบอร์ดก่อนเสมอ เพื่อกันข้อผิดพลาดและอำนวยความสะดวก
     try {
-      const response = await fetch('/api/send-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: order.lineUserId.trim(),
-          message
-        })
-      });
+      navigator.clipboard.writeText(message);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
 
-      if (response.ok) {
-        const resData = await response.json();
-        if (resData.simulated) {
-          alert(`📲 [Simulated] ส่งข้อความสถานะให้คุณ ${order.customerName} สำเร็จแล้ว (เนื่องจากยังไม่ได้ตั้งค่า LINE_CHANNEL_ACCESS_TOKEN บนเซิร์ฟเวอร์ค่ะ)\n\nข้อความที่ส่ง:\n${message}`);
+    const socialInfo = getSocialInfo(order.customerSocial);
+    const hasLineUserId = !!(order.lineUserId && order.lineUserId.trim());
+    const hasPersonalLineId = !!(socialInfo && socialInfo.type === 'line' && socialInfo.cleanId);
+
+    if (hasLineUserId) {
+      // 1. กรณีมี LINE User ID: พยายามส่งอัตโนมัติผ่าน API บอทก่อน
+      try {
+        const response = await fetch('/api/send-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: order.lineUserId.trim(),
+            message
+          })
+        });
+
+        const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
+        const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.simulated) {
+            alert(
+              `📲 [โหมดจำลอง] คัดลอกข้อความสถานะแล้ว!\n` +
+              `เนื่องจากยังไม่ได้เปิดระบบเชื่อมต่อบอท API สมบูรณ์ ระบบได้คัดลอกข้อความให้คุณแล้วค่ะ\n` +
+              `กดตกลงเพื่อเปิดหน้าแชทของลูกค้ารายนี้บน LINE OA เพื่อวางส่งได้ทันทีเลยค่ะ 💬`
+            );
+            window.open(directOaUrl, '_blank');
+          } else {
+            alert(`✅ ส่งข้อความแจ้งสถานะอัตโนมัติไปยัง LINE ของคุณ ${order.customerName} เรียบร้อยแล้วค่ะ!`);
+          }
         } else {
-          alert(`✅ ส่งข้อความแจ้งสถานะอัปเดตไปยัง LINE ของคุณ ${order.customerName} เรียบร้อยแล้วค่ะ!`);
+          // หาก API เกิดความผิดพลาด ให้คัดลอกและเปิดหน้าแชทของลูกค้ารายนั้นโดยตรงเพื่อให้แอดมินกดวางส่งเอง
+          alert(
+            `📋 คัดลอกข้อความสถานะเรียบร้อยแล้วค่ะ!\n` +
+            `(การส่งอัตโนมัติผ่านระบบหลังบ้านแจ้งสถานะ: "${await response.text()}")\n` +
+            `ระบบจะเปิดหน้าห้องแชทลูกค้าโดยตรงใน LINE OA ให้คุณนำข้อความไปวาง (Paste) และส่งได้ทันทีเลยค่ะ 💬`
+          );
+          window.open(directOaUrl, '_blank');
         }
-      } else {
-        const errText = await response.text();
-        alert(`❌ ไม่สามารถส่งข้อความได้: ${errText}`);
+      } catch (err: any) {
+        // หากมี error ใดๆ เช่น เชื่อมต่อไม่ได้ ให้พาไปหน้าแชทตรงพร้อมสถานะที่ก๊อปปี้แล้ว
+        const cleanId = lineOaId.startsWith('@') ? lineOaId : `@${lineOaId}`;
+        const directOaUrl = `https://manager.line.biz/account/${cleanId}/chat/user/${order.lineUserId.trim()}`;
+        alert(
+          `📋 คัดลอกข้อความสถานะแล้ว!\n` +
+          `(ระบบหลังบ้านติดข้อขัดข้องชั่วคราว: ${err.message || err})\n` +
+          `กดตกลงเพื่อเปิดหน้าห้องแชทตรงใน LINE OA แล้วกดวางข้อความส่งคุยต่อได้ทันทีเลยค่ะ 💬`
+        );
+        window.open(directOaUrl, '_blank');
       }
-    } catch (err: any) {
-      alert(`❌ เกิดข้อผิดพลาดในการส่งข้อมูล: ${err.message || err}`);
+    } else if (hasPersonalLineId) {
+      // 2. กรณีไม่มี LINE User ID แต่มี ID ไลน์ส่วนตัวของลูกค้า
+      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
+      alert(
+        `📋 คัดลอกข้อความสถานะอัปเดตของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
+        `ระบบจะนำคุณไปยังห้องแชท LINE ส่วนตัวของลูกค้าคนนี้โดยตรง คุณสามารถกดวาง (Paste) ข้อความเพื่อส่งได้ทันทีเลยค่ะ 🟢`
+      );
+      window.open(personalUrl, '_blank');
+    } else {
+      // 3. กรณีไม่มีทั้งสองอย่าง
+      alert(
+        `📋 คัดลอกข้อความสถานะของ คุณ ${order.customerName} เรียบร้อยแล้วค่ะ!\n\n` +
+        `เนื่องจากออเดอร์นี้ไม่มีการระบุข้อมูลช่องทางเชื่อมต่อโดยตรง\n` +
+        `ให้แอดมินค้นหาแชทชื่อ "${order.customerName}" บนหน้าแชท LINE OA ของร้านคุณที่กำลังจะเปิดขึ้นนี้ เพื่อคลิกและวางข้อความส่งได้เลยค่ะ 💬`
+      );
+      window.open(lineOaChatUrl || 'https://chat.line.biz/', '_blank');
     }
   };
 
@@ -335,7 +432,7 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
   return (
     <div className="space-y-6">
 
-      {/* Public Render URL Config Header */}
+      {/* Public Render URL & LINE OA Config Header */}
       <div className="bg-gradient-to-r from-amber-50 to-amber-100/30 border border-amber-200/60 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center space-x-2.5">
           <div className="p-2 bg-amber-500/10 text-amber-700 rounded-xl">
@@ -343,10 +440,10 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
           </div>
           <div>
             <h4 className="text-xs font-black text-natural-espresso flex items-center gap-1.5">
-              <span>🔗 ลิงก์สาธารณะสำหรับแชร์ให้ลูกค้า (Render.com URL)</span>
+              <span>🔗 ลิงก์สาธารณะ & การเชื่อมโยง LINE ร้าน</span>
             </h4>
             <p className="text-[10px] text-natural-espresso/60 font-medium">
-              ปัจจุบันใช้: <strong className="text-amber-800 break-all">{publicUrl}</strong>
+              เว็บไซต์ลูกค้า: <strong className="text-amber-800 font-mono break-all">{publicUrl}</strong> | LINE OA: <strong className="text-emerald-800 font-mono">{lineOaId}</strong>
             </p>
           </div>
         </div>
@@ -355,43 +452,115 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
           onClick={() => setShowUrlSettings(!showUrlSettings)}
           className="text-xs font-bold text-amber-800 hover:text-amber-900 bg-white hover:bg-amber-100/50 px-3 py-1.5 rounded-xl border border-amber-200 transition-colors shadow-2xs cursor-pointer flex items-center space-x-1"
         >
-          <span>{showUrlSettings ? '✕ ปิดตั้งค่า' : '⚙️ ตั้งค่าลิงก์ Render'}</span>
+          <span>{showUrlSettings ? '✕ ปิดตั้งค่า' : '⚙️ ตั้งค่าระบบเว็บ & LINE'}</span>
         </button>
       </div>
 
       {showUrlSettings && (
-        <div className="bg-white p-5 rounded-2xl border border-natural-wheat shadow-md space-y-3.5 animate-fadeIn">
-          <div className="space-y-1">
-            <h5 className="text-xs font-bold text-natural-espresso">ตั้งค่าลิงก์หลักของร้าน (Render App URL)</h5>
-            <p className="text-[11px] text-natural-espresso/60 leading-relaxed">
-              กรอกลิงก์เว็บไซต์ของร้านคุณที่ได้มาจาก Render.com (เช่น <code className="bg-natural-sand/50 px-1 py-0.5 rounded text-[10px] font-mono">https://nunuh.onrender.com</code>) เพื่อให้ระบบสร้างลิงก์เช็คสถานะออเดอร์ให้ลูกค้าในแชท LINE คัดลอกไปส่งได้ทันที แม้ว่าตัวผู้ดูแลร้านกำลังใช้งานระบบผ่านช่องทางผู้พัฒนา (AI Studio) อยู่ค่ะ
+        <div className="bg-white p-5 rounded-2xl border border-natural-wheat shadow-md space-y-5 animate-fadeIn">
+          
+          {/* Section 1: Render.com URL */}
+          <div className="space-y-2.5">
+            <div className="space-y-1">
+              <h5 className="text-xs font-black text-natural-espresso flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span>1. ลิงก์หลักของร้านคุณ (Render App URL)</span>
+              </h5>
+              <p className="text-[11px] text-natural-espresso/60 leading-relaxed pl-3">
+                กรอกลิงก์เว็บไซต์ของร้านคุณที่ได้มาจาก Render.com (เช่น <code className="bg-natural-sand/50 px-1 py-0.5 rounded text-[10px] font-mono">https://nunuh.onrender.com</code>) เพื่อให้ระบบสร้างลิงก์เช็คสถานะออเดอร์ให้ลูกค้าคัดลอกไปส่งในแชท LINE ได้ถูกต้องค่ะ
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 pl-3">
+              <div className="relative flex-1">
+                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-natural-espresso/40" />
+                <input
+                  type="url"
+                  value={publicUrl}
+                  onChange={(e) => handleSavePublicUrl(e.target.value)}
+                  placeholder="เช่น https://nunuh.onrender.com"
+                  className="w-full text-xs pl-8.5 pr-4 py-2.5 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 bg-natural-cream/10 font-mono"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  handleSavePublicUrl(window.location.origin);
+                  alert('รีเซ็ตลิงก์หลักกลับมาใช้ URL ปัจจุบันเรียบร้อยแล้วค่ะ');
+                }}
+                className="px-4 py-2 bg-natural-sand hover:bg-natural-wheat text-natural-espresso font-bold text-xs rounded-xl transition-colors cursor-pointer shrink-0"
+              >
+                🔄 ใช้ลิงก์ปัจจุบัน
+              </button>
+            </div>
+            <p className="text-[10px] text-amber-600 font-bold pl-3">
+              💡 ลิงก์อัพเดตที่จะถูกแชร์: <span className="break-all font-mono text-[9px] bg-amber-50 px-1 py-0.5 rounded">{publicUrl}?tab=customer&search=เบอร์โทรศัพท์ลูกค้า&mode=customer</span>
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-natural-espresso/40" />
-              <input
-                type="url"
-                value={publicUrl}
-                onChange={(e) => handleSavePublicUrl(e.target.value)}
-                placeholder="เช่น https://nunuh.onrender.com"
-                className="w-full text-xs pl-8.5 pr-4 py-2.5 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 bg-natural-cream/10 font-mono"
-              />
+
+          <hr className="border-natural-sand/60" />
+
+          {/* Section 2: LINE OA settings */}
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <h5 className="text-xs font-black text-natural-espresso flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>2. ตั้งค่า LINE Official Account (LINE OA) ของร้าน</span>
+              </h5>
+              <p className="text-[11px] text-natural-espresso/60 leading-relaxed pl-3">
+                ระบุข้อมูล ID และลิงก์แผงควบคุมแชทของร้านคุณ เพื่อช่วยให้ปุ่มเชื่อมต่อ LINE สามารถเปิดห้องแชทของลูกค้าเพื่อส่งสถานะให้แอดมินคุยกับลูกค้าได้ถูกต้องโดยไม่ผิดพลาดค่ะ
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                handleSavePublicUrl(window.location.origin);
-                alert('รีเซ็ตลิงก์หลักกลับมาใช้ URL ปัจจุบันเรียบร้อยแล้วค่ะ');
-              }}
-              className="px-4 py-2 bg-natural-sand hover:bg-natural-wheat text-natural-espresso font-bold text-xs rounded-xl transition-colors cursor-pointer shrink-0"
-            >
-              🔄 ใช้ลิงก์ปัจจุบัน
-            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-3">
+              
+              {/* LINE OA ID Field */}
+              <div className="space-y-1.5">
+                <label className="text-[10.5px] font-bold text-natural-espresso/70 block">
+                  🟢 LINE OA ID ของร้าน (เช่น @237ayntq)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-natural-espresso/45">ID</span>
+                  <input
+                    type="text"
+                    value={lineOaId}
+                    onChange={(e) => handleSaveLineOaId(e.target.value)}
+                    placeholder="เช่น @237ayntq"
+                    className="w-full text-xs pl-8 pr-4 py-2.5 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 bg-natural-cream/5 font-mono"
+                  />
+                </div>
+                <span className="text-[9px] text-natural-espresso/45 block">
+                  * ใช้สำหรับปุ่ม แชท LINE OA (ใช้เปิดหน้าแชท LINE Official Account Manager ของลูกค้ารายนั้นตาม User ID)
+                </span>
+              </div>
+
+              {/* LINE OA Admin Chat URL Field */}
+              <div className="space-y-1.5">
+                <label className="text-[10.5px] font-bold text-natural-espresso/70 block">
+                  💬 ลิงก์หน้าแชทหลักของแอดมิน (LINE Chat Admin URL)
+                </label>
+                <input
+                  type="text"
+                  value={lineOaChatUrl}
+                  onChange={(e) => handleSaveLineOaChatUrl(e.target.value)}
+                  placeholder="เช่น https://chat.line.biz/"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 bg-natural-cream/5 font-mono"
+                />
+                <span className="text-[9px] text-natural-espresso/45 block leading-relaxed">
+                  * โดยทั่วไปคือ <code className="bg-natural-sand px-1 rounded font-mono">https://chat.line.biz/</code> หรือลิงก์เฉพาะแชทของร้านคุณ เช่น <code className="bg-natural-sand px-1 rounded font-mono">https://chat.line.biz/Uxxxxxxxxxxxxxx/chat</code>
+                </span>
+              </div>
+
+            </div>
+
+            <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-xl ml-3">
+              <p className="text-[10px] text-emerald-800 font-medium leading-relaxed">
+                💡 <strong>เคล็ดลับการคุย LINE ลูกค้าได้ทันที:</strong> <br />
+                - <strong>กรณีใช้ LINE ส่วนตัว:</strong> ให้ใส่ไอดีลูกค้าไว้ใน "ช่องทางติดต่อ" (เช่น <code className="bg-emerald-100/50 px-1 rounded">line: somchai_id</code>) ระบบจะสร้างปุ่ม <strong>"เปิด LINE ลูกค้าโดยตรง"</strong> ให้เปิดคุยได้ทันที <br />
+                - <strong>กรณีใช้ LINE OA:</strong> กดปุ่ม <strong>"คุย LINE (แอดมิน)"</strong> เพื่อคัดลอกข้อความแจ้งสถานะและเปิดระบบแชท LINE OA ของร้านท่าน แล้วใช้ปุ่มค้นหาด้วยชื่อลูกค้าเพื่อวางข้อความพูดคุยได้ทันทีเลยค่ะ!
+              </p>
+            </div>
           </div>
-          <p className="text-[10px] text-amber-600 font-bold">
-            💡 ตัวอย่างลิงก์เช็คสถานะที่จะถูกส่ง: <span className="break-all font-mono text-[9px] bg-amber-50 px-1 py-0.5 rounded">{publicUrl}?tab=customer&search=086-555-1234&mode=customer</span>
-          </p>
+
         </div>
       )}
       
@@ -764,17 +933,45 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                                   <span className="font-bold text-natural-espresso bg-natural-sand/50 px-1.5 py-0.5 rounded border border-natural-wheat/50 text-[11px]">
                                     {order.customerSocial}
                                   </span>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDirectLineChat(order);
-                                    }}
-                                    className="bg-[#06C755] hover:bg-[#05b34c] text-white text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1 shadow-xs transition-all cursor-pointer inline-flex shrink-0 ml-1.5"
-                                    title="คลิกเพื่อเปิดคุยแชท LINE กับลูกค้าทันที"
-                                  >
-                                    <span>คุย LINE 💬</span>
-                                  </button>
+                                  {socialInfo?.type === 'line' ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
+                                          window.open(personalUrl, '_blank');
+                                        }}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 shadow-xs transition-all cursor-pointer inline-flex shrink-0 ml-1.5"
+                                        title="เปิดหน้าแชทไลน์ส่วนตัวของลูกค้าคนนี้โดยตรง"
+                                      >
+                                        <span>ไลน์ส่วนตัวคนนี้ 🟢</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDirectLineChat(order);
+                                        }}
+                                        className="bg-[#06C755] hover:bg-[#05b34c] text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 shadow-xs transition-all cursor-pointer inline-flex shrink-0 ml-1"
+                                        title="คัดลอกข้อความแจ้งสถานะและเปิดหน้าแผงแชท LINE OA ของร้านคุณ"
+                                      >
+                                        <span>ส่งสถานะเข้า LINE OA 💬</span>
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDirectLineChat(order);
+                                      }}
+                                      className="bg-[#06C755] hover:bg-[#05b34c] text-white text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1 shadow-xs transition-all cursor-pointer inline-flex shrink-0 ml-1.5"
+                                      title="คลิกเพื่อเปิดแชท LINE ของร้าน"
+                                    >
+                                      <span>คุย LINE 💬</span>
+                                    </button>
+                                  )}
                                 </div>
                               );
                             })()}
@@ -897,17 +1094,40 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                               <Printer className="h-3.5 w-3.5" />
                               <span>พิมพ์ใบออเดอร์ 🖨️</span>
                             </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDirectLineChat(order);
-                              }}
-                              className="bg-[#06C755] hover:bg-[#05b34c] text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
-                            >
-                              <MessageSquare className="h-3.5 w-3.5" />
-                              <span>คุย LINE (แอดมิน) 💬</span>
-                            </button>
+                            {(() => {
+                              const socialInfo = getSocialInfo(order.customerSocial);
+                              if (socialInfo && socialInfo.type === 'line' && socialInfo.cleanId) {
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const personalUrl = `https://line.me/ti/p/~${socialInfo.cleanId}`;
+                                      window.open(personalUrl, '_blank');
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
+                                    title="เปิดหน้าแชทไลน์ส่วนตัวของลูกค้าคนนี้โดยตรง"
+                                  >
+                                    <MessageSquare className="h-3.5 w-3.5" />
+                                    <span>แชท LINE ลูกค้าโดยตรง 🟢</span>
+                                  </button>
+                                );
+                              }
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDirectLineChat(order);
+                                  }}
+                                  className="bg-[#06C755] hover:bg-[#05b34c] text-white text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs flex-1"
+                                  title="คัดลอกข้อความแจ้งสถานะและเปิดหน้าแผงแชท LINE OA ของร้านคุณ"
+                                >
+                                  <MessageSquare className="h-3.5 w-3.5" />
+                                  <span>คุย LINE (แอดมิน) 💬</span>
+                                </button>
+                              );
+                            })()}
                             <button
                               type="button"
                               onClick={(e) => {
