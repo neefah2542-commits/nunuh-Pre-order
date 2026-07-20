@@ -95,21 +95,30 @@ body {
 
 /* @media print styles to enable flawless browser printing */
 @media print {
+  /* กำหนดขนาดหน้ากระดาษ A4 และระยะขอบ (Margin) */
+  @page {
+    size: A4 portrait;
+    margin: 10mm !important;
+  }
+
+  /* รีเซ็ต Body และ Container ไม่ให้ดันเนื้อหาลงล่าง */
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: #ffffff !important;
+  }
+
   /* Hide standard body and all elements by default during print */
   body * {
     visibility: hidden !important;
   }
 
-  /* Completely exclude elements with .no-print from rendering */
-  .no-print, .no-print * {
+  /* Completely exclude elements with .no-print, header, nav, footer, sidebar from rendering */
+  .no-print, .no-print *, header, nav, footer, .sidebar {
     display: none !important;
     visibility: hidden !important;
-  }
-  
-  /* Reset margins for A4 pages */
-  @page {
-    size: A4 portrait;
-    margin: 8mm 10mm 8mm 10mm; /* Narrow margins for maximum single-page space */
   }
 
   /* Bypass all parent positioning, scroll-clipping, and overflow constraints */
@@ -132,17 +141,18 @@ body {
     display: block !important;
   }
 
-  /* Make sure printable sheet takes full width and is fully visible */
-  .print-only-modal {
+  /* บังคับการ์ดใบสั่งซื้อให้อยู่บนสุดเสมอ */
+  .print-only-modal,
+  .print-card-container {
     visibility: visible !important;
     display: block !important;
     position: absolute !important;
-    left: 0 !important;
     top: 0 !important;
+    left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 2mm 4mm !important; /* Extremely tight printable padding */
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
     background: white !important;
@@ -151,81 +161,111 @@ body {
     break-inside: avoid !important;
   }
 
-  .print-only-modal * {
+  .print-only-modal *,
+  .print-card-container * {
     visibility: visible !important;
   }
 
   /* Tighten paddings, margins, and layouts specifically for single-page print fit */
-  .print-only-modal .py-5 {
+  .print-only-modal .py-5,
+  .print-card-container .py-5 {
     padding-top: 1.5mm !important;
     padding-bottom: 1.5mm !important;
   }
-  .print-only-modal .py-6, .print-only-modal .pt-6 {
+  .print-only-modal .py-6, .print-only-modal .pt-6,
+  .print-card-container .py-6, .print-card-container .pt-6 {
     padding-top: 2mm !important;
     padding-bottom: 2mm !important;
   }
-  .print-only-modal .pb-6 {
+  .print-only-modal .pb-6,
+  .print-card-container .pb-6 {
     padding-bottom: 2mm !important;
   }
-  .print-only-modal .mb-3 {
+  .print-only-modal .mb-3,
+  .print-card-container .mb-3 {
     margin-bottom: 1mm !important;
   }
-  .print-only-modal .mb-4 {
+  .print-only-modal .mb-4,
+  .print-card-container .mb-4 {
     margin-bottom: 1.5mm !important;
   }
-  .print-only-modal .gap-4 {
+  .print-only-modal .gap-4,
+  .print-card-container .gap-4 {
     gap: 1.5mm !important;
   }
 
   /* Compress size of measurement cards */
-  .print-only-modal .grid-cols-2 {
+  .print-only-modal .grid-cols-2,
+  .print-card-container .grid-cols-2 {
     gap: 1.5mm !important;
   }
-  .print-only-modal .bg-natural-sand\/20 {
+  .print-only-modal .bg-natural-sand\/20,
+  .print-card-container .bg-natural-sand\/20 {
     padding: 1.2mm !important;
     border-radius: 6px !important;
   }
-  .print-only-modal .text-sm {
+  .print-only-modal .text-sm,
+  .print-card-container .text-sm {
     font-size: 11px !important;
   }
   
   /* Restrict reference image size so it never pushes content to page 2 */
-  .print-only-modal img {
+  .print-only-modal img,
+  .print-card-container img {
     max-height: 38mm !important;
     width: auto !important;
     object-fit: contain !important;
     margin: 0 auto !important;
   }
   .print-only-modal .max-h-48,
-  .print-only-modal .print\:max-h-44 {
+  .print-only-modal .print\:max-h-44,
+  .print-card-container .max-h-48,
+  .print-card-container .print\:max-h-44 {
     max-height: 40mm !important;
     padding: 0.5mm !important;
     margin: 0 !important;
   }
 
   /* Shrink text sizing slightly to guarantee single page fit */
-  .print-only-modal h2 {
+  .print-only-modal h2,
+  .print-card-container h2 {
     font-size: 14pt !important;
   }
-  .print-only-modal h4 {
+  .print-only-modal h4,
+  .print-card-container h4 {
     font-size: 10pt !important;
   }
-  .print-only-modal .text-xs {
+  .print-only-modal .text-xs,
+  .print-card-container .text-xs {
     font-size: 10px !important;
   }
-  .print-only-modal .text-\[10px\] {
+  .print-only-modal .text-\[10px\],
+  .print-card-container .text-\[10px\] {
     font-size: 9px !important;
   }
-  .print-only-modal .text-\[9px\] {
+  .print-only-modal .text-\[9px\],
+  .print-card-container .text-\[9px\] {
     font-size: 8px !important;
   }
 
   /* Compress signature inputs */
-  .print-only-modal .h-10 {
+  .print-only-modal .h-10,
+  .print-card-container .h-10 {
     height: 6mm !important;
   }
-  .print-only-modal .pt-6 {
+  .print-only-modal .pt-6,
+  .print-card-container .pt-6 {
     padding-top: 2.5mm !important;
+  }
+
+  /* Compact customer body photos section on print to guarantee single page */
+  .print-only-modal .customer-photos-section img,
+  .print-card-container .customer-photos-section img {
+    max-height: 22mm !important;
+  }
+  .print-only-modal .customer-photos-section .h-32,
+  .print-card-container .customer-photos-section .h-32 {
+    height: 22mm !important;
   }
 
   /* Force background colors to print beautifully on browsers */

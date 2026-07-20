@@ -162,7 +162,7 @@ export default function PrintOrderModal({ order, isOpen, onClose }: PrintOrderMo
         <div className="p-8 overflow-y-auto bg-natural-sand/15 flex-1 flex justify-center">
           
           {/* Printable Sheet (Standard A4 Proportions on Screen) */}
-          <div className="print-only-modal bg-white w-full max-w-3xl p-8 sm:p-12 border border-natural-wheat shadow-lg rounded-xl text-natural-espresso relative" id="nunuh-print-sheet">
+          <div className="print-only-modal print-card-container bg-white w-full max-w-3xl p-8 sm:p-12 border border-natural-wheat shadow-lg rounded-xl text-natural-espresso relative" id="nunuh-print-sheet">
             
             {/* Elegant Header Accent */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-natural-clay via-natural-ochre to-natural-sage rounded-t-xl print:hidden"></div>
@@ -625,7 +625,7 @@ export default function PrintOrderModal({ order, isOpen, onClose }: PrintOrderMo
 
                 {/* Customer Body Photos Section (For tailors) */}
                 {(order.customerPhotoFront || order.customerPhotoSide || order.customerPhotoBack) && (
-                  <div className="py-5 border-b border-natural-sand text-xs">
+                  <div className="py-5 border-b border-natural-sand text-xs customer-photos-section">
                     <h4 className="font-serif font-bold text-xs text-natural-espresso flex items-center mb-3">
                       📸 ภาพถ่ายสัดส่วนสรีระลูกค้า (Customer Body Proportions)
                     </h4>
