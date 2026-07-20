@@ -14,14 +14,14 @@ export enum OrderStatus {
 }
 
 export interface Measurements {
-  chest: string;        // รอบอก (นิ้ว)
-  waist: string;        // รอบเอว (นิ้ว)
-  hips: string;         // รอบสะโพก (นิ้ว)
-  shoulder: string;     // ไหล่กว้าง (นิ้ว)
-  sleeveLength: string; // ความยาวแขน (นิ้ว)
-  armhole: string;      // รอบวงแขน (นิ้ว)
-  length: string;       // ความยาวชุด (นิ้ว)
-  neck: string;         // รอบคอ (นิ้ว)
+  chest: string;        // รอบอก (ซม.)
+  waist: string;        // รอบเอว (ซม.)
+  hips: string;         // รอบสะโพก (ซม.)
+  shoulder: string;     // ไหล่กว้าง (ซม.)
+  sleeveLength: string; // ความยาวแขน (ซม.)
+  armhole: string;      // รอบวงแขน (ซม.)
+  length: string;       // ความยาวชุด (ซม.)
+  neck: string;         // รอบคอ (ซม.)
   height: string;       // ส่วนสูง (ซม.)
   weight: string;       // น้ำหนัก (กก.)
   otherNotes: string;   // รายละเอียดการวัดตัวอื่นๆ

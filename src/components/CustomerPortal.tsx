@@ -857,27 +857,27 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
                                 <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                                   <div className="bg-natural-cream/35 p-1 rounded">
                                     <p className="text-[9px] text-natural-espresso/45 font-bold">อก</p>
-                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.chest}″</p>
+                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.chest} ซม.</p>
                                   </div>
                                   <div className="bg-natural-cream/35 p-1 rounded">
                                     <p className="text-[9px] text-natural-espresso/45 font-bold">เอว</p>
-                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.waist}″</p>
+                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.waist} ซม.</p>
                                   </div>
                                   <div className="bg-natural-cream/35 p-1 rounded">
                                     <p className="text-[9px] text-natural-espresso/45 font-bold">สะโพก</p>
-                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.hips}″</p>
+                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.hips} ซม.</p>
                                   </div>
                                   <div className="bg-natural-cream/35 p-1 rounded">
                                     <p className="text-[9px] text-natural-espresso/45 font-bold">ไหล่</p>
-                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.shoulder}″</p>
+                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.shoulder} ซม.</p>
                                   </div>
                                   <div className="bg-natural-cream/35 p-1 rounded">
                                     <p className="text-[9px] text-natural-espresso/45 font-bold">ความยาว</p>
-                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.length}″</p>
+                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.length} ซม.</p>
                                   </div>
                                   <div className="bg-natural-cream/35 p-1 rounded">
                                     <p className="text-[9px] text-natural-espresso/45 font-bold">ส่วนสูง</p>
-                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.height}cm</p>
+                                    <p className="font-mono font-bold text-natural-espresso">{order.measurements.height} ซม.</p>
                                   </div>
                                 </div>
                               </div>
@@ -1006,9 +1006,9 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
                             <div className="text-xs space-y-1 bg-natural-sand/20 p-2.5 rounded-xl border border-natural-wheat/40">
                               <p className="text-[9px] text-natural-espresso/45 font-bold uppercase tracking-wider">ขนาดชุดที่ตัดสำเร็จ</p>
                               <div className="font-mono font-bold text-natural-espresso/85 grid grid-cols-3 gap-1 text-center text-[10px]">
-                                <div>อก: {order.measurements.chest}″</div>
-                                <div>เอว: {order.measurements.waist}″</div>
-                                <div>สะโพก: {order.measurements.hips}″</div>
+                                <div>อก: {order.measurements.chest} ซม.</div>
+                                <div>เอว: {order.measurements.waist} ซม.</div>
+                                <div>สะโพก: {order.measurements.hips} ซม.</div>
                               </div>
                             </div>
 

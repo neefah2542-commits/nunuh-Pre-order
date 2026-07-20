@@ -892,35 +892,35 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 text-center">
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">อก (Chest)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.chest}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.chest} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">เอว (Waist)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.waist}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.waist} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">สะโพก (Hips)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.hips}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.hips} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">ไหล่ (Shoulder)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.shoulder}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.shoulder} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">ยาวแขน (Sleeve)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.sleeveLength}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.sleeveLength} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">วงแขน (Armhole)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.armhole}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.armhole} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">ยาวชุด (Length)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.length}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.length} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">รอบคอ (Neck)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.neck}″</p>
+                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.neck} ซม.</p>
                           </div>
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">ส่วนสูง (Height)</p>
@@ -931,7 +931,7 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                             <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.weight || '-'} kg</p>
                           </div>
                           <div className="p-1.5 bg-natural-sand rounded-lg flex items-center justify-center">
-                            <span className="text-[9px] text-natural-espresso/50 font-bold uppercase">หน่วยนิ้ว</span>
+                            <span className="text-[9px] text-natural-espresso/50 font-bold uppercase">หน่วย ซม.</span>
                           </div>
                         </div>
 

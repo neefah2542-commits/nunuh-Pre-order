@@ -736,10 +736,10 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                 <div className="p-1.5 bg-natural-sand rounded-lg text-natural-espresso">
                   <Ruler className="h-4 w-4" />
                 </div>
-                <h3 className="font-serif font-bold text-natural-espresso">3. ตารางวัดตัวสัดส่วนลูกค้า (Measurements in inches)</h3>
+                <h3 className="font-serif font-bold text-natural-espresso">3. ตารางวัดตัวสัดส่วนลูกค้า (Measurements in cm)</h3>
               </div>
               <span className="text-[10px] bg-natural-sand text-natural-espresso/70 px-2 py-1 rounded font-bold uppercase">
-                หน่วย: นิ้ว (Inches)
+                หน่วย: เซนติเมตร (Centimeters)
               </span>
             </div>
 
@@ -855,7 +855,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={chest}
                   onChange={(e) => setChest(e.target.value)}
-                  placeholder="เช่น 34"
+                  placeholder="เช่น 86"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>
@@ -865,7 +865,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={waist}
                   onChange={(e) => setWaist(e.target.value)}
-                  placeholder="เช่น 26"
+                  placeholder="เช่น 76"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>
@@ -875,7 +875,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={hips}
                   onChange={(e) => setHips(e.target.value)}
-                  placeholder="เช่น 37"
+                  placeholder="เช่น 97"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>
@@ -885,7 +885,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={shoulder}
                   onChange={(e) => setShoulder(e.target.value)}
-                  placeholder="เช่น 15"
+                  placeholder="เช่น 38"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>
@@ -895,7 +895,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={sleeveLength}
                   onChange={(e) => setSleeveLength(e.target.value)}
-                  placeholder="เช่น 22"
+                  placeholder="เช่น 56"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>
@@ -905,7 +905,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={armhole}
                   onChange={(e) => setArmhole(e.target.value)}
-                  placeholder="เช่น 15.5"
+                  placeholder="เช่น 38"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>
@@ -915,7 +915,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={length}
                   onChange={(e) => setLength(e.target.value)}
-                  placeholder="เช่น 55"
+                  placeholder="เช่น 137"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>
@@ -925,7 +925,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   type="text"
                   value={neck}
                   onChange={(e) => setNeck(e.target.value)}
-                  placeholder="เช่น 14"
+                  placeholder="เช่น 35"
                   className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
                 />
               </div>

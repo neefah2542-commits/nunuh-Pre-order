@@ -191,35 +191,35 @@ export default function PrintOrderModal({ order, isOpen, onClose }: PrintOrderMo
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs mb-4">
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">รอบอก</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.chest}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.chest} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">รอบเอว</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.waist}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.waist} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">สะโพก</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.hips}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.hips} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ไหล่กว้าง</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.shoulder}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.shoulder} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ความยาวแขน</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.sleeveLength}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.sleeveLength} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">รอบวงแขน</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.armhole}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.armhole} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ความยาวชุด</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.length}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.length} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">รอบคอ</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.neck}"</strong>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.neck} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ส่วนสูง</span>

@@ -615,89 +615,89 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
 
               <div className="grid grid-cols-3 gap-2.5 text-xs">
                 <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบอก (นิ้ว)</label>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบอก (ซม.)</label>
                   <input
                     type="text"
                     value={chest}
                     onChange={(e) => setChest(e.target.value)}
-                    placeholder="เช่น 34"
+                    placeholder="เช่น 86"
                     className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบเอว (นิ้ว)</label>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบเอว (ซม.)</label>
                   <input
                     type="text"
                     value={waist}
                     onChange={(e) => setWaist(e.target.value)}
-                    placeholder="เช่น 26"
+                    placeholder="เช่น 76"
                     className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบสะโพก (นิ้ว)</label>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบสะโพก (ซม.)</label>
                   <input
                     type="text"
                     value={hips}
                     onChange={(e) => setHips(e.target.value)}
-                    placeholder="เช่น 37"
+                    placeholder="เช่น 97"
                     className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ไหล่กว้าง (นิ้ว)</label>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ไหล่กว้าง (ซม.)</label>
                   <input
                     type="text"
                     value={shoulder}
                     onChange={(e) => setShoulder(e.target.value)}
-                    placeholder="เช่น 15"
+                    placeholder="เช่น 38"
                     className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ความยาวแขน (นิ้ว)</label>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ความยาวแขน (ซม.)</label>
                   <input
                     type="text"
                     value={sleeveLength}
                     onChange={(e) => setSleeveLength(e.target.value)}
-                    placeholder="เช่น 22"
-                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบวงแขน (นิ้ว)</label>
-                  <input
-                    type="text"
-                    value={armhole}
-                    onChange={(e) => setArmhole(e.target.value)}
-                    placeholder="เช่น 15"
-                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ความยาวชุด (นิ้ว)</label>
-                  <input
-                    type="text"
-                    value={length}
-                    onChange={(e) => setLength(e.target.value)}
                     placeholder="เช่น 56"
                     className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบคอ (นิ้ว)</label>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบวงแขน (ซม.)</label>
+                  <input
+                    type="text"
+                    value={armhole}
+                    onChange={(e) => setArmhole(e.target.value)}
+                    placeholder="เช่น 38"
+                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ความยาวชุด (ซม.)</label>
+                  <input
+                    type="text"
+                    value={length}
+                    onChange={(e) => setLength(e.target.value)}
+                    placeholder="เช่น 137"
+                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบคอ (ซม.)</label>
                   <input
                     type="text"
                     value={neck}
                     onChange={(e) => setNeck(e.target.value)}
-                    placeholder="เช่น 13.5"
+                    placeholder="เช่น 35"
                     className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
                   />
                 </div>
