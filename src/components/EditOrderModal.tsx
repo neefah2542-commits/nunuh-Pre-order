@@ -50,6 +50,11 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
   const [neck, setNeck] = useState(order.measurements.neck || '');
   const [height, setHeight] = useState((order.measurements.height || '').toString());
   const [weight, setWeight] = useState((order.measurements.weight || '').toString());
+  const [frontChest, setFrontChest] = useState(order.measurements.frontChest || '');
+  const [backChest, setBackChest] = useState(order.measurements.backChest || '');
+  const [frontLength, setFrontLength] = useState(order.measurements.frontLength || '');
+  const [backLength, setBackLength] = useState(order.measurements.backLength || '');
+  const [wrist, setWrist] = useState(order.measurements.wrist || '');
   const [otherNotes, setOtherNotes] = useState(order.measurements.otherNotes || '');
   const [selectedSize, setSelectedSize] = useState<string>(order.measurements.standardSize || '');
 
@@ -113,6 +118,11 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
       neck: neck.trim(),
       height: height.trim(),
       weight: weight.trim(),
+      frontChest: frontChest.trim(),
+      backChest: backChest.trim(),
+      frontLength: frontLength.trim(),
+      backLength: backLength.trim(),
+      wrist: wrist.trim(),
       otherNotes: otherNotes.trim(),
       standardSize: selectedSize || undefined
     };
@@ -613,6 +623,22 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                 </div>
               </div>
 
+              {/* คำอธิบายเรื่องหน่วยวัดตัว */}
+              <div className="bg-natural-sand/20 border border-natural-wheat/60 p-3 rounded-xl text-xs text-natural-espresso/80 space-y-1">
+                <p className="font-bold text-natural-clay flex items-center gap-1.5">
+                  <Ruler className="h-4 w-4" />
+                  <span>คำชี้แจงเกี่ยวกับหน่วยวัดสัดส่วน (Measurement Unit Guidelines):</span>
+                </p>
+                <ul className="list-disc list-inside space-y-1 pl-1 text-[11px]">
+                  <li>
+                    <span className="font-semibold text-natural-espresso">ตารางไซส์มาตรฐาน (ตารางด้านบน):</span> แสดงขนาดเป็นหน่วย <strong className="text-natural-clay font-bold">นิ้ว (″)</strong> ตามมาตรฐานชุดสำเร็จรูป
+                  </li>
+                  <li>
+                    <span className="font-semibold text-natural-espresso">ช่องกรอกข้อมูลสัดส่วนเฉพาะบุคคล (ช่องกรอกด้านล่าง):</span> กรณีท่านระบุสัดส่วนที่ <strong className="text-natural-clay font-bold">วัดตัวด้วยตนเอง (Custom)</strong> กรุณากรอกตัวเลขโดยใช้หน่วยเป็น <strong className="text-natural-clay font-bold">เซนติเมตร (ซม.)</strong> เพื่อความละเอียดสูงสุดในการตัดเย็บ
+                  </li>
+                </ul>
+              </div>
+
               <div className="grid grid-cols-3 gap-2.5 text-xs">
                 <div>
                   <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบอก (ซม.)</label>
@@ -691,16 +717,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                   />
                 </div>
 
-                <div>
-                  <label className="block font-medium text-natural-espresso/70 mb-0.5">รอบคอ (ซม.)</label>
-                  <input
-                    type="text"
-                    value={neck}
-                    onChange={(e) => setNeck(e.target.value)}
-                    placeholder="เช่น 35"
-                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
-                  />
-                </div>
+
 
                 <div>
                   <label className="block font-medium text-natural-espresso/70 mb-0.5">ส่วนสูงลูกค้า (ซม.)</label>
@@ -719,6 +736,56 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
                     placeholder="เช่น 52"
+                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">บ่าหน้า (ซม.)</label>
+                  <input
+                    type="text"
+                    value={frontChest}
+                    onChange={(e) => setFrontChest(e.target.value)}
+                    placeholder="เช่น 34"
+                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">บ่าหลัง (ซม.)</label>
+                  <input
+                    type="text"
+                    value={backChest}
+                    onChange={(e) => setBackChest(e.target.value)}
+                    placeholder="เช่น 36"
+                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ยาวหน้า (ซม.)</label>
+                  <input
+                    type="text"
+                    value={frontLength}
+                    onChange={(e) => setFrontLength(e.target.value)}
+                    placeholder="เช่น 35"
+                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ยาวหลัง (ซม.)</label>
+                  <input
+                    type="text"
+                    value={backLength}
+                    onChange={(e) => setBackLength(e.target.value)}
+                    placeholder="เช่น 38"
+                    className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-natural-espresso/70 mb-0.5">ข้อมือ (ซม.)</label>
+                  <input
+                    type="text"
+                    value={wrist}
+                    onChange={(e) => setWrist(e.target.value)}
+                    placeholder="เช่น 15"
                     className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-natural-cream/5"
                   />
                 </div>

@@ -65,16 +65,16 @@ body {
 }
 
 .theme-pink {
-  --color-natural-cream: #FCF5F7;
-  --color-natural-sand: #F7E5EC;
-  --color-natural-wheat: #ECD0D8;
-  --color-natural-clay: #D15E82;
-  --color-natural-clay-dark: #AF4263;
-  --color-natural-sage: #788E8B;
-  --color-natural-sage-dark: #526A6D;
-  --color-natural-ochre: #DFB593;
-  --color-natural-espresso: #301A22;
-  --color-natural-espresso-dark: #200E13;
+  --color-natural-cream: #FFF5F8;
+  --color-natural-sand: #FFE3EC;
+  --color-natural-wheat: #FFC2D6;
+  --color-natural-clay: #D91A5F;
+  --color-natural-clay-dark: #B00E46;
+  --color-natural-sage: #7A8B99;
+  --color-natural-sage-dark: #5B6C7A;
+  --color-natural-ochre: #FF85A2;
+  --color-natural-espresso: #3B0D1C;
+  --color-natural-espresso-dark: #24040E;
 }
 
 /* Custom transitions and premium warm-toned UI touches */

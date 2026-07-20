@@ -217,10 +217,7 @@ export default function PrintOrderModal({ order, isOpen, onClose }: PrintOrderMo
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ความยาวชุด</span>
                   <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.length} ซม.</strong>
                 </div>
-                <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
-                  <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">รอบคอ</span>
-                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.neck} ซม.</strong>
-                </div>
+
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ส่วนสูง</span>
                   <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.height} ซม.</strong>
@@ -228,6 +225,26 @@ export default function PrintOrderModal({ order, isOpen, onClose }: PrintOrderMo
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">น้ำหนัก</span>
                   <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.weight || '-'} กก.</strong>
+                </div>
+                <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
+                  <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">บ่าหน้า</span>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.frontChest || '-'} ซม.</strong>
+                </div>
+                <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
+                  <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">บ่าหลัง</span>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.backChest || '-'} ซม.</strong>
+                </div>
+                <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
+                  <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ยาวหน้า</span>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.frontLength || '-'} ซม.</strong>
+                </div>
+                <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
+                  <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ยาวหลัง</span>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.backLength || '-'} ซม.</strong>
+                </div>
+                <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40">
+                  <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">ข้อมือ</span>
+                  <strong className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.wrist || '-'} ซม.</strong>
                 </div>
                 <div className="bg-natural-sand/20 p-2 rounded-lg border border-natural-wheat/40 flex flex-col justify-center">
                   <span className="block text-[9px] text-natural-espresso/50 font-bold uppercase">สไตล์สัดส่วน</span>

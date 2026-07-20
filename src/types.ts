@@ -21,9 +21,14 @@ export interface Measurements {
   sleeveLength: string; // ความยาวแขน (ซม.)
   armhole: string;      // รอบวงแขน (ซม.)
   length: string;       // ความยาวชุด (ซม.)
-  neck: string;         // รอบคอ (ซม.)
+  neck?: string;         // รอบคอ (ซม.)
   height: string;       // ส่วนสูง (ซม.)
   weight: string;       // น้ำหนัก (กก.)
+  frontChest?: string;  // บ่าหน้า (ซม.)
+  backChest?: string;   // บ่าหลัง (ซม.)
+  frontLength?: string; // ยาวหน้า (ซม.)
+  backLength?: string;  // ยาวหลัง (ซม.)
+  wrist?: string;       // ข้อมือ (ซม.)
   otherNotes: string;   // รายละเอียดการวัดตัวอื่นๆ
   standardSize?: string; // ไซส์มาตรฐาน เช่น SS, S, M, L, XL
 }

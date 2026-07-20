@@ -879,6 +879,36 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
                                     <p className="text-[9px] text-natural-espresso/45 font-bold">ส่วนสูง</p>
                                     <p className="font-mono font-bold text-natural-espresso">{order.measurements.height} ซม.</p>
                                   </div>
+                                  {order.measurements.frontChest && order.measurements.frontChest !== '-' && (
+                                    <div className="bg-natural-cream/35 p-1 rounded">
+                                      <p className="text-[9px] text-natural-espresso/45 font-bold">บ่าหน้า</p>
+                                      <p className="font-mono font-bold text-natural-espresso">{order.measurements.frontChest} ซม.</p>
+                                    </div>
+                                  )}
+                                  {order.measurements.backChest && order.measurements.backChest !== '-' && (
+                                    <div className="bg-natural-cream/35 p-1 rounded">
+                                      <p className="text-[9px] text-natural-espresso/45 font-bold">บ่าหลัง</p>
+                                      <p className="font-mono font-bold text-natural-espresso">{order.measurements.backChest} ซม.</p>
+                                    </div>
+                                  )}
+                                  {order.measurements.frontLength && order.measurements.frontLength !== '-' && (
+                                    <div className="bg-natural-cream/35 p-1 rounded">
+                                      <p className="text-[9px] text-natural-espresso/45 font-bold">ยาวหน้า</p>
+                                      <p className="font-mono font-bold text-natural-espresso">{order.measurements.frontLength} ซม.</p>
+                                    </div>
+                                  )}
+                                  {order.measurements.backLength && order.measurements.backLength !== '-' && (
+                                    <div className="bg-natural-cream/35 p-1 rounded">
+                                      <p className="text-[9px] text-natural-espresso/45 font-bold">ยาวหลัง</p>
+                                      <p className="font-mono font-bold text-natural-espresso">{order.measurements.backLength} ซม.</p>
+                                    </div>
+                                  )}
+                                  {order.measurements.wrist && order.measurements.wrist !== '-' && (
+                                    <div className="bg-natural-cream/35 p-1 rounded">
+                                      <p className="text-[9px] text-natural-espresso/45 font-bold">ข้อมือ</p>
+                                      <p className="font-mono font-bold text-natural-espresso">{order.measurements.wrist} ซม.</p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
@@ -1009,6 +1039,21 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
                                 <div>อก: {order.measurements.chest} ซม.</div>
                                 <div>เอว: {order.measurements.waist} ซม.</div>
                                 <div>สะโพก: {order.measurements.hips} ซม.</div>
+                                {order.measurements.frontChest && order.measurements.frontChest !== '-' && (
+                                  <div>บ่าหน้า: {order.measurements.frontChest} ซม.</div>
+                                )}
+                                {order.measurements.backChest && order.measurements.backChest !== '-' && (
+                                  <div>บ่าหลัง: {order.measurements.backChest} ซม.</div>
+                                )}
+                                {order.measurements.frontLength && order.measurements.frontLength !== '-' && (
+                                  <div>ยาวหน้า: {order.measurements.frontLength} ซม.</div>
+                                )}
+                                {order.measurements.backLength && order.measurements.backLength !== '-' && (
+                                  <div>ยาวหลัง: {order.measurements.backLength} ซม.</div>
+                                )}
+                                {order.measurements.wrist && order.measurements.wrist !== '-' && (
+                                  <div>ข้อมือ: {order.measurements.wrist} ซม.</div>
+                                )}
                               </div>
                             </div>
 

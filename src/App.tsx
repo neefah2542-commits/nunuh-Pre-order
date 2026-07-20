@@ -34,7 +34,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('tracker'); // tracker, orderForm, calendar, catalogue
   const [isCustomerMode, setIsCustomerMode] = useState<boolean>(false);
   const [theme, setTheme] = useState<string>(() => {
-    return localStorage.getItem('nunuh_selected_theme') || 'sand';
+    return localStorage.getItem('nunuh_selected_theme') || 'pink';
   });
 
   // Save selected theme to localStorage when changed
@@ -464,14 +464,14 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setTheme('pink')}
-                  className={`w-6 h-6 rounded-lg transition-all cursor-pointer relative flex items-center justify-center bg-[#FCF5F7] border ${
+                  className={`w-6 h-6 rounded-lg transition-all cursor-pointer relative flex items-center justify-center bg-[#FFF5F8] border ${
                     theme === 'pink'
                       ? 'border-natural-clay ring-2 ring-natural-clay/20 shadow-xs scale-105'
                       : 'border-natural-wheat/40 hover:border-natural-clay/30'
                   }`}
-                  title="ธีมสีชมพูพาสเทลหรู (Royal Pink)"
+                  title="ธีมสีชมพูบานเย็น (Fuchsia Royale)"
                 >
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#D15E82]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#D91A5F]" />
                 </button>
               </div>
             </div>

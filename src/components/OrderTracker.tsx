@@ -371,9 +371,13 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
       'ความยาวแขน',
       'รอบวงแขน',
       'ความยาวชุด',
-      'รอบคอ',
       'ส่วนสูง',
       'น้ำหนัก',
+      'บ่าหน้า',
+      'บ่าหลัง',
+      'ยาวหน้า',
+      'ยาวหลัง',
+      'ข้อมือ',
       'บันทึกเพิ่มเติม'
     ];
 
@@ -404,9 +408,13 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
       o.measurements.sleeveLength,
       o.measurements.armhole,
       o.measurements.length,
-      o.measurements.neck,
       o.measurements.height || '-',
       o.measurements.weight || '-',
+      o.measurements.frontChest || '-',
+      o.measurements.backChest || '-',
+      o.measurements.frontLength || '-',
+      o.measurements.backLength || '-',
+      o.measurements.wrist || '-',
       o.measurements.otherNotes || '-'
     ]);
 
@@ -418,7 +426,7 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
       'Order Number', 'Customer Name', 'Phone', 'Social Contact', 'Job Type', 'Membership Card Type', 'External Order ID', 'Dress Type', 
       'Fabric Type', 'Fabric Color', 'Status', 'Order Date', 'Delivery Date', 
       'Price', 'Discount', 'Deposit', 'Payment Method', 'Unpaid Balance', 'Chest', 'Waist', 'Hips', 
-      'Shoulder', 'Sleeve Length', 'Armhole', 'Dress Length', 'Neck', 'Height', 'Other Notes'
+      'Shoulder', 'Sleeve Length', 'Armhole', 'Dress Length', 'Height', 'Weight', 'Front Chest', 'Back Chest', 'Front Length', 'Back Length', 'Wrist', 'Other Notes'
     ];
 
     const rows = orders.map(o => [
@@ -447,8 +455,13 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
       `"${o.measurements.sleeveLength}"`,
       `"${o.measurements.armhole}"`,
       `"${o.measurements.length}"`,
-      `"${o.measurements.neck}"`,
       o.measurements.height || 0,
+      o.measurements.weight || 0,
+      `"${o.measurements.frontChest || '-'}"`,
+      `"${o.measurements.backChest || '-'}"`,
+      `"${o.measurements.frontLength || '-'}"`,
+      `"${o.measurements.backLength || '-'}"`,
+      `"${o.measurements.wrist || '-'}"`,
       `"${(o.measurements.otherNotes || '-').replace(/"/g, '""')}"`
     ]);
 
@@ -918,10 +931,7 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                             <p className="text-[10px] text-natural-espresso/45 font-bold">ยาวชุด (Length)</p>
                             <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.length} ซม.</p>
                           </div>
-                          <div className="p-1.5 bg-natural-cream/30 rounded-lg">
-                            <p className="text-[10px] text-natural-espresso/45 font-bold">รอบคอ (Neck)</p>
-                            <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.neck} ซม.</p>
-                          </div>
+
                           <div className="p-1.5 bg-natural-cream/30 rounded-lg">
                             <p className="text-[10px] text-natural-espresso/45 font-bold">ส่วนสูง (Height)</p>
                             <p className="text-sm font-mono font-bold text-natural-espresso">{order.measurements.height} cm</p>
