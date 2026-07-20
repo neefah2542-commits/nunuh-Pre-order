@@ -60,6 +60,7 @@ export interface Order {
   sku?: string;              // รหัสสินค้า / SKU
   customDesign?: CustomDesignDetails;
   customImage?: string; // ภาพชุดอ้างอิงแนบมา (Base64 string หรือรูปภาพจากแคตตาล็อก)
+  customImage2?: string; // ภาพชุดอ้างอิงแนบมา ช่องที่ 2 (Base64 string หรือรูปภาพจากแคตตาล็อก)
   customerPhotoFront?: string; // ภาพถ่ายลูกค้า ด้านหน้า
   customerPhotoSide?: string;  // ภาพถ่ายลูกค้า ด้านข้าง
   customerPhotoBack?: string;  // ภาพถ่ายลูกค้า ด้านหลัง

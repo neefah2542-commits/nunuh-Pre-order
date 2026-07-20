@@ -1078,26 +1078,47 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                             </div>
                           )}
 
-                          {order.customImage && (
+                          {(order.customImage || order.customImage2) && (
                             <div className="pt-2 border-t border-natural-sand/50">
                               <p className="text-[10px] text-natural-espresso/45 font-bold mb-1.5 flex items-center">
                                 <MessageSquare className="h-3 w-3 mr-1 text-natural-clay" />
-                                <span>รูปภาพแบบชุดสั่งตัด (Design Reference Photo)</span>
+                                <span>รูปภาพแบบชุดสั่งตัด (Design Reference Photos)</span>
                               </p>
-                              <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/5 max-h-48 group">
-                                <img 
-                                  src={order.customImage} 
-                                  alt="Custom Reference" 
-                                  className="w-full object-contain max-h-48 rounded-lg cursor-zoom-in"
-                                  referrerPolicy="no-referrer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const imgWindow = window.open();
-                                    if (imgWindow) {
-                                      imgWindow.document.write(`<img src="${order.customImage}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
-                                    }
-                                  }}
-                                />
+                              <div className={`grid ${order.customImage && order.customImage2 ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+                                {order.customImage && (
+                                  <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/5 max-h-48 group">
+                                    <img 
+                                      src={order.customImage} 
+                                      alt="Custom Reference 1" 
+                                      className="w-full object-contain max-h-48 rounded-lg cursor-zoom-in mx-auto"
+                                      referrerPolicy="no-referrer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const imgWindow = window.open();
+                                        if (imgWindow) {
+                                          imgWindow.document.write(`<img src="${order.customImage}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                {order.customImage2 && (
+                                  <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/5 max-h-48 group">
+                                    <img 
+                                      src={order.customImage2} 
+                                      alt="Custom Reference 2" 
+                                      className="w-full object-contain max-h-48 rounded-lg cursor-zoom-in mx-auto"
+                                      referrerPolicy="no-referrer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const imgWindow = window.open();
+                                        if (imgWindow) {
+                                          imgWindow.document.write(`<img src="${order.customImage2}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}

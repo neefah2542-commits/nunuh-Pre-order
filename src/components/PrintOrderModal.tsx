@@ -22,6 +22,7 @@ export default function PrintOrderModal({ order, isOpen, onClose }: PrintOrderMo
 
   // ดึงรูปภาพสำหรับพิมพ์ (จากอัปโหลด หรือจากแคตตาล็อก หรือรูปสเก็ตช์นางแบบตั้งต้น)
   let displayImage = order.customImage;
+  let displayImage2 = order.customImage2;
   let imageSourceLabel = "ภาพอ้างอิงดีไซน์สั่งตัด";
 
   if (!displayImage && order.selectedDesignId) {
@@ -567,18 +568,32 @@ export default function PrintOrderModal({ order, isOpen, onClose }: PrintOrderMo
                       </div>
                     </div>
 
-                    {displayImage && (
+                    {(displayImage || displayImage2) && (
                       <div className="space-y-1.5 flex flex-col justify-center">
                         <p className="text-[10px] text-natural-espresso/45 font-bold uppercase tracking-wider flex items-center justify-between">
                           <span>🖼 {imageSourceLabel}</span>
                         </p>
-                        <div className="border border-natural-wheat rounded-xl p-1 bg-natural-sand/10 flex items-center justify-center max-h-48 overflow-hidden print:max-h-44">
-                          <img 
-                            src={displayImage} 
-                            alt="Design Reference for print" 
-                            className="max-h-44 object-contain rounded-lg print:max-h-40"
-                            referrerPolicy="no-referrer"
-                          />
+                        <div className={`grid ${displayImage && displayImage2 ? 'grid-cols-2' : 'grid-cols-1'} gap-1.5`}>
+                          {displayImage && (
+                            <div className="border border-natural-wheat rounded-xl p-1 bg-natural-sand/10 flex items-center justify-center max-h-48 overflow-hidden print:max-h-44">
+                              <img 
+                                src={displayImage} 
+                                alt="Design Reference for print 1" 
+                                className="max-h-44 object-contain rounded-lg print:max-h-36 mx-auto"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
+                          {displayImage2 && (
+                            <div className="border border-natural-wheat rounded-xl p-1 bg-natural-sand/10 flex items-center justify-center max-h-48 overflow-hidden print:max-h-44">
+                              <img 
+                                src={displayImage2} 
+                                alt="Design Reference for print 2" 
+                                className="max-h-44 object-contain rounded-lg print:max-h-36 mx-auto"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

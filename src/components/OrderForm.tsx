@@ -32,6 +32,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
   
   const [selectedDesignId, setSelectedDesignId] = useState<string>('custom');
   const [customImage, setCustomImage] = useState<string>('');
+  const [customImage2, setCustomImage2] = useState<string>('');
   
   // Custom design details
   const [silhouette, setSilhouette] = useState('A-Line');
@@ -147,7 +148,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
     };
 
     const finalDressType = dressType === 'อื่นๆ' ? customDressType : dressType;
-    const finalFabricType = fabricType === 'อื่นๆ' ? customFabricType : fabricType;
+    const finalFabricType = fabricType;
 
     const newOrder: Order = {
       id: `order-${Date.now()}`,
@@ -175,6 +176,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
         sleeves
       } : undefined,
       customImage: customImage || undefined,
+      customImage2: customImage2 || undefined,
       customerPhotoFront: customerPhotoFront || undefined,
       customerPhotoSide: customerPhotoSide || undefined,
       customerPhotoBack: customerPhotoBack || undefined,
@@ -225,6 +227,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
       setNotes('');
       setSelectedDesignId('custom');
       setCustomImage('');
+      setCustomImage2('');
       setCustomerPhotoFront('');
       setCustomerPhotoSide('');
       setCustomerPhotoBack('');
@@ -476,209 +479,18 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
               </div>
 
               <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-natural-espresso/70 mb-1">รูปแบบดีไซน์พื้นฐาน</label>
-                    <select
-                      value={selectedDesignId}
-                      onChange={(e) => handleSelectDesign(e.target.value)}
-                      className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
-                    >
-                      <option value="custom">✨ ออกแบบใหม่ (Custom Tailoring)</option>
-                      {catalogue.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          🏷️ {item.name} ({item.category}) {item.sku ? `[${item.sku}]` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-natural-espresso/70 mb-1 flex items-center space-x-1">
-                      <span>รหัสสินค้า / SKU</span>
-                      <span className="text-[10px] text-natural-clay font-bold">(ดึงอัตโนมัติ/ระบุเพิ่ม)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={sku}
-                      onChange={(e) => setSku(e.target.value)}
-                      placeholder="เช่น NNH-MKB-06"
-                      className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20 font-mono uppercase font-bold text-natural-clay"
-                    />
-                  </div>
-                </div>
-
-                {selectedDesignId === 'custom' ? (
-                  <div className="bg-natural-sand/30 p-3 rounded-xl border border-natural-wheat grid grid-cols-3 gap-2 text-xs">
-                    <div>
-                      <label className="block text-[10px] font-bold text-natural-espresso/60 mb-1 uppercase">ทรงเสื้อผ้า (Silhouette)</label>
-                      <select 
-                        value={silhouette} 
-                        onChange={(e) => setSilhouette(e.target.value)}
-                        className="w-full px-1 py-1 rounded bg-white border border-natural-wheat text-natural-espresso"
-                      >
-                        <option>A-Line (บานเล็กน้อย)</option>
-                        <option>Princess (บานอลังการ)</option>
-                        <option>Column (ตรงเรียบหรู)</option>
-                        <option>Mermaid (หางปลาเข้ารูป)</option>
-                        <option>Fitted (ทรงสอบสกินนี่)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-natural-espresso/60 mb-1 uppercase">สไตล์คอ (Neckline)</label>
-                      <select 
-                        value={neckline} 
-                        onChange={(e) => setNeckline(e.target.value)}
-                        className="w-full px-1 py-1 rounded bg-white border border-natural-wheat text-natural-espresso"
-                      >
-                        <option>V-Neck (คอวี)</option>
-                        <option>Round (คอกลม)</option>
-                        <option>Sweetheart (คอหัวใจ)</option>
-                        <option>Off-shoulder (ปาดไหล่)</option>
-                        <option>High Neck (คอจีน/คอตั้ง)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-natural-espresso/60 mb-1 uppercase">แขนเสื้อ (Sleeves)</label>
-                      <select 
-                        value={sleeves} 
-                        onChange={(e) => setSleeves(e.target.value)}
-                        className="w-full px-1 py-1 rounded bg-white border border-natural-wheat text-natural-espresso"
-                      >
-                        <option>Sleeveless (แขนกุด)</option>
-                        <option>Puff (แขนพองตุ๊กตา)</option>
-                        <option>Long Sleeves (แขนกระบอกยาว)</option>
-                        <option>Bell (แขนกระดิ่งระบาย)</option>
-                        <option>Short (แขนสั้นสไตล์เรียบร้อย)</option>
-                      </select>
-                    </div>
-                  </div>
-                ) : (
-                  (() => {
-                    const matchedItem = catalogue.find(i => i.id === selectedDesignId);
-                    if (!matchedItem) return null;
-                    return (
-                      <div className="bg-natural-sand/20 p-4 rounded-xl border border-natural-wheat text-xs text-natural-espresso space-y-3">
-                        <div className="flex gap-3">
-                          <img 
-                            src={matchedItem.image} 
-                            alt={matchedItem.name} 
-                            className="h-20 w-20 object-cover rounded-lg border border-natural-wheat bg-white shrink-0"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-serif font-bold text-natural-espresso text-sm">{matchedItem.name}</span>
-                              <span className="text-[10px] bg-natural-espresso text-natural-cream px-1.5 py-0.5 rounded-full font-bold">{matchedItem.category}</span>
-                            </div>
-                            <p className="text-natural-espresso/80 text-[11px] leading-relaxed line-clamp-2">
-                              {matchedItem.description}
-                            </p>
-                            <div className="text-[10px] text-natural-espresso/60 flex flex-wrap gap-x-2">
-                              <span>🧵 ผ้าที่แนะนำ: <strong className="font-semibold text-natural-espresso">{matchedItem.fabricRecommend}</strong></span>
-                              <span>|</span>
-                              <span>💰 ราคาประเมิน: <strong className="font-semibold text-natural-espresso">{matchedItem.priceRange}</strong></span>
-                            </div>
-                          </div>
-                        </div>
-                        {matchedItem.features && matchedItem.features.length > 0 && (
-                          <div className="pt-2 border-t border-natural-sand/50">
-                            <p className="text-[10px] font-bold text-natural-espresso/60 uppercase mb-1">จุดเด่น / รายละเอียดดีไซน์หลัก:</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {matchedItem.features.map((feat, i) => (
-                                <span key={i} className="bg-white/85 text-natural-espresso px-2 py-0.5 rounded-md border border-natural-wheat/40 text-[10px]">
-                                  ✨ {feat}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {matchedItem.sizes && matchedItem.sizes.length > 0 && (
-                          <div className="pt-2 border-t border-natural-sand/50">
-                            <p className="text-[10px] font-bold text-natural-clay uppercase mb-1 flex items-center gap-1">
-                              <Sparkles className="h-3 w-3 text-natural-ochre" />
-                              <span>เลือกขนาดที่แนะนำด่วน (คลิกสั่งไซส์มาตรฐานทันที):</span>
-                            </p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {matchedItem.sizes.map((sz, i) => {
-                                const isSelected = selectedSize === sz;
-                                return (
-                                  <button
-                                    key={i}
-                                    type="button"
-                                    onClick={() => handleSizeChange(sz)}
-                                    className={`px-3 py-1 rounded-lg text-xs font-serif font-bold transition-all cursor-pointer border flex items-center gap-1 ${
-                                      isSelected
-                                        ? 'bg-natural-clay text-white border-natural-clay shadow-xs'
-                                        : 'bg-white hover:bg-natural-sand/20 text-natural-espresso border-natural-wheat'
-                                    }`}
-                                  >
-                                    <span>ไซส์ {sz}</span>
-                                    {isSelected && <Check className="h-3 w-3" />}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-natural-espresso/70 mb-1">ประเภทชุดตัดเย็บ</label>
-                    <select
-                      value={dressType}
-                      onChange={(e) => setDressType(e.target.value)}
-                      className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
-                    >
-                      <option value="เดรสราตรี">เดรสราตรีออกงาน</option>
-                      <option value="อาบายะห์">อาบายะห์ (Abaya)</option>
-                      <option value="จั๊มสูท">จั๊มสูท (Jumpsuit)</option>
-                      <option value="เดรสสั้น">เดรสสั้น (Short Dress)</option>
-                      <option value="ชุดทำงาน">ชุดทำงาน / สูทสุภาพ</option>
-                      <option value="ชุดไทย">ชุดไทยประยุกต์</option>
-                      <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
-                    {dressType === 'อื่นๆ' && (
-                      <input
-                        type="text"
-                        required
-                        value={customDressType}
-                        onChange={(e) => setCustomDressType(e.target.value)}
-                        placeholder="ระบุประเภทชุด"
-                        className="w-full text-xs mt-1.5 px-3 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-white"
-                      />
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-natural-espresso/70 mb-1">ชนิดเนื้อผ้า</label>
-                    <select
-                      value={fabricType}
-                      onChange={(e) => setFabricType(e.target.value)}
-                      className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
-                    >
-                      <option value="Heavy Premium Satin">Heavy Premium Satin</option>
-                      <option value="Premium Silk Crepe">Premium Silk Crepe</option>
-                      <option value="French Chantilly Lace">French Chantilly Lace</option>
-                      <option value="Italian Wool Blend">Italian Wool Blend</option>
-                      <option value="Luminous Organza">Luminous Organza</option>
-                      <option value="ผ้าลินินธรรมชาติ">ผ้าลินินธรรมชาติ (Linen)</option>
-                      <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
-                    {fabricType === 'อื่นๆ' && (
-                      <input
-                        type="text"
-                        required
-                        value={customFabricType}
-                        onChange={(e) => setCustomFabricType(e.target.value)}
-                        placeholder="ระบุชนิดผ้า"
-                        className="w-full text-xs mt-1.5 px-3 py-1.5 rounded-lg border border-natural-wheat focus:outline-none focus:ring-1 focus:ring-natural-clay bg-white"
-                      />
-                    )}
-                  </div>
+                <div>
+                  <label className="block text-xs font-medium text-natural-espresso/70 mb-1 flex items-center space-x-1">
+                    <span>รหัสสินค้า / SKU</span>
+                    <span className="text-[10px] text-natural-clay font-bold">(ดึงอัตโนมัติ/ระบุเพิ่ม)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    placeholder="เช่น NNH-MKB-06"
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20 font-mono uppercase font-bold text-natural-clay"
+                  />
                 </div>
 
                 <div>
@@ -696,57 +508,116 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                 <div className="pt-3 border-t border-natural-sand/55">
                   <label className="block text-xs font-bold text-natural-espresso/80 mb-2 flex items-center space-x-1.5">
                     <ImageIcon className="h-3.5 w-3.5 text-natural-clay" />
-                    <span>แนบรูปภาพแบบชุดสั่งตัด (Design Reference Photo)</span>
+                    <span>แนบรูปภาพแบบชุดสั่งตัด (Design Reference Photos)</span>
                   </label>
                   
-                  {customImage ? (
-                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-2 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <img 
-                          src={customImage} 
-                          alt="Custom Design Reference" 
-                          className="h-14 w-14 object-cover rounded-lg border border-natural-wheat shadow-xs"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-natural-espresso">แนบรูปภาพอ้างอิงเรียบร้อย ✓</p>
-                          <p className="text-[10px] text-natural-espresso/50">รูปภาพจะถูกบันทึกและแสดงในประวัติออเดอร์</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* ช่องที่ 1 */}
+                    <div>
+                      <p className="text-[10px] font-bold text-natural-espresso/50 mb-1">รูปภาพช่องที่ 1 (Photo 1)</p>
+                      {customImage ? (
+                        <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-2 flex items-center justify-between h-[84px]">
+                          <div className="flex items-center space-x-3 overflow-hidden">
+                            <img 
+                              src={customImage} 
+                              alt="Custom Design Reference 1" 
+                              className="h-14 w-14 object-cover rounded-lg border border-natural-wheat shadow-xs shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="truncate">
+                              <p className="text-xs font-bold text-natural-espresso">แนบรูปภาพเรียบร้อย ✓</p>
+                              <p className="text-[10px] text-natural-espresso/50">รูปภาพช่องที่ 1</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCustomImage('')}
+                            className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1 shrink-0"
+                            title="ลบรูปภาพ"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setCustomImage('')}
-                        className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
-                        title="ลบรูปภาพ"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                      ) : (
+                        <div className="relative border-2 border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center h-[84px] flex flex-col items-center justify-center">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setCustomImage(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            title="คลิกหรือลากรูปภาพมาวางที่นี่"
+                          />
+                          <div className="flex flex-col items-center justify-center space-y-1">
+                            <UploadCloud className="h-6 w-6 text-natural-clay/75" />
+                            <p className="text-[11px] font-bold text-natural-espresso">อัปโหลดภาพที่ 1</p>
+                            <p className="text-[9px] text-natural-espresso/40 font-medium">คลิกหรือลากไฟล์ภาพ</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="relative border-2 border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-4 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCustomImage(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        title="คลิกหรือลากรูปภาพมาวางที่นี่"
-                      />
-                      <div className="flex flex-col items-center justify-center space-y-1">
-                        <UploadCloud className="h-7 w-7 text-natural-clay/75" />
-                        <p className="text-xs font-bold text-natural-espresso">คลิก หรือลากไฟล์ภาพแบบที่ต้องการมาวาง</p>
-                        <p className="text-[10px] text-natural-espresso/40 font-medium">รองรับ JPG, PNG, WEBP (แปลงเก็บอัตโนมัติ)</p>
-                      </div>
+
+                    {/* ช่องที่ 2 */}
+                    <div>
+                      <p className="text-[10px] font-bold text-natural-espresso/50 mb-1">รูปภาพช่องที่ 2 (Photo 2)</p>
+                      {customImage2 ? (
+                        <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-2 flex items-center justify-between h-[84px]">
+                          <div className="flex items-center space-x-3 overflow-hidden">
+                            <img 
+                              src={customImage2} 
+                              alt="Custom Design Reference 2" 
+                              className="h-14 w-14 object-cover rounded-lg border border-natural-wheat shadow-xs shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="truncate">
+                              <p className="text-xs font-bold text-natural-espresso">แนบรูปภาพเรียบร้อย ✓</p>
+                              <p className="text-[10px] text-natural-espresso/50">รูปภาพช่องที่ 2</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCustomImage2('')}
+                            className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1 shrink-0"
+                            title="ลบรูปภาพ"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative border-2 border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center h-[84px] flex flex-col items-center justify-center">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setCustomImage2(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            title="คลิกหรือลากรูปภาพมาวางที่นี่"
+                          />
+                          <div className="flex flex-col items-center justify-center space-y-1">
+                            <UploadCloud className="h-6 w-6 text-natural-clay/75" />
+                            <p className="text-[11px] font-bold text-natural-espresso">อัปโหลดภาพที่ 2</p>
+                            <p className="text-[9px] text-natural-espresso/40 font-medium">คลิกหรือลากไฟล์ภาพ</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>

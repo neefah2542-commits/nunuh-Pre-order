@@ -82,6 +82,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
 
   // Image states
   const [customImage, setCustomImage] = useState(order.customImage || '');
+  const [customImage2, setCustomImage2] = useState(order.customImage2 || '');
   const [customerPhotoFront, setCustomerPhotoFront] = useState(order.customerPhotoFront || '');
   const [customerPhotoSide, setCustomerPhotoSide] = useState(order.customerPhotoSide || '');
   const [customerPhotoBack, setCustomerPhotoBack] = useState(order.customerPhotoBack || '');
@@ -95,11 +96,12 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
     };
   }, []);
 
-  const handleImageUpload = (file: File, type: 'custom' | 'front' | 'side' | 'back' | 'slip') => {
+  const handleImageUpload = (file: File, type: 'custom' | 'custom2' | 'front' | 'side' | 'back' | 'slip') => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
       if (type === 'custom') setCustomImage(base64String);
+      if (type === 'custom2') setCustomImage2(base64String);
       if (type === 'front') setCustomerPhotoFront(base64String);
       if (type === 'side') setCustomerPhotoSide(base64String);
       if (type === 'back') setCustomerPhotoBack(base64String);
@@ -159,6 +161,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
       status,
       measurements: updatedMeasurements,
       customImage: customImage || undefined,
+      customImage2: customImage2 || undefined,
       customerPhotoFront: customerPhotoFront || undefined,
       customerPhotoSide: customerPhotoSide || undefined,
       customerPhotoBack: customerPhotoBack || undefined,
@@ -348,10 +351,20 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                   <label className="block text-xs font-semibold text-natural-espresso/70 mb-1">ชนิดเนื้อผ้า</label>
                   <input
                     type="text"
+                    list="edit-fabric-types"
                     value={fabricType}
                     onChange={(e) => setFabricType(e.target.value)}
+                    placeholder="ระบุหรือเลือกชนิดผ้า"
                     className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10"
                   />
+                  <datalist id="edit-fabric-types">
+                    <option value="Heavy Premium Satin" />
+                    <option value="Premium Silk Crepe" />
+                    <option value="French Chantilly Lace" />
+                    <option value="Italian Wool Blend" />
+                    <option value="Luminous Organza" />
+                    <option value="ผ้าลินินธรรมชาติ" />
+                  </datalist>
                 </div>
 
                 <div>
@@ -868,10 +881,10 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                 <h3 className="font-serif font-bold text-natural-espresso text-sm">5. แนบหรือเปลี่ยนภาพถ่ายประกอบ (Photos Attachment)</h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                {/* Design Reference */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {/* Design Reference 1 */}
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-natural-espresso/75 text-center">ภาพดีไซน์อ้างอิง</p>
+                  <p className="text-xs font-bold text-natural-espresso/75 text-center">ภาพดีไซน์อ้างอิง 1</p>
                   {customImage ? (
                     <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
                       <img src={customImage} alt="Ref" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
@@ -892,7 +905,35 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                       />
                       <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
-                      <span className="text-[10px] text-natural-espresso/50">อัปโหลดภาพแบบชุด</span>
+                      <span className="text-[10px] text-natural-espresso/50 font-semibold">อัปโหลดแบบที่ 1</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Design Reference 2 */}
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-natural-espresso/75 text-center">ภาพดีไซน์อ้างอิง 2</p>
+                  {customImage2 ? (
+                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
+                      <img src={customImage2} alt="Ref 2" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                      <button 
+                        type="button" 
+                        onClick={() => setCustomImage2('')} 
+                        className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-all cursor-pointer"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative border-2 border-dashed border-natural-sand/50 hover:border-natural-clay/40 rounded-xl h-36 flex flex-col items-center justify-center transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'custom2')} 
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                      />
+                      <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
+                      <span className="text-[10px] text-natural-espresso/50 font-semibold">อัปโหลดแบบที่ 2</span>
                     </div>
                   )}
                 </div>

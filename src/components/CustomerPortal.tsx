@@ -808,22 +808,42 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
                                       📐 {order.customDesign.silhouette} | {order.customDesign.neckline} | {order.customDesign.sleeves}
                                     </p>
                                   )}
-                                  {order.customImage && (
+                                  {(order.customImage || order.customImage2) && (
                                     <div className="mt-2.5 pt-2.5 border-t border-natural-sand/60">
                                       <p className="text-[10px] text-natural-espresso/45 font-bold mb-1 uppercase tracking-wider">รูปภาพแบบชุดอ้างอิง</p>
-                                      <div className="relative rounded-lg overflow-hidden border border-natural-wheat h-28 bg-natural-sand/5 flex items-center justify-center">
-                                        <img 
-                                          src={order.customImage} 
-                                          alt="Design Reference" 
-                                          className="h-full object-contain cursor-zoom-in"
-                                          referrerPolicy="no-referrer"
-                                          onClick={() => {
-                                            const imgWindow = window.open();
-                                            if (imgWindow) {
-                                              imgWindow.document.write(`<img src="${order.customImage}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
-                                            }
-                                          }}
-                                        />
+                                      <div className={`grid ${order.customImage && order.customImage2 ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+                                        {order.customImage && (
+                                          <div className="relative rounded-lg overflow-hidden border border-natural-wheat h-28 bg-natural-sand/5 flex items-center justify-center">
+                                            <img 
+                                              src={order.customImage} 
+                                              alt="Design Reference 1" 
+                                              className="h-full object-contain cursor-zoom-in"
+                                              referrerPolicy="no-referrer"
+                                              onClick={() => {
+                                                const imgWindow = window.open();
+                                                if (imgWindow) {
+                                                  imgWindow.document.write(`<img src="${order.customImage}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
+                                                }
+                                              }}
+                                            />
+                                          </div>
+                                        )}
+                                        {order.customImage2 && (
+                                          <div className="relative rounded-lg overflow-hidden border border-natural-wheat h-28 bg-natural-sand/5 flex items-center justify-center">
+                                            <img 
+                                              src={order.customImage2} 
+                                              alt="Design Reference 2" 
+                                              className="h-full object-contain cursor-zoom-in"
+                                              referrerPolicy="no-referrer"
+                                              onClick={() => {
+                                                const imgWindow = window.open();
+                                                if (imgWindow) {
+                                                  imgWindow.document.write(`<img src="${order.customImage2}" style="max-width:100%; max-height:100vh; display:block; margin:auto;"/>`);
+                                                }
+                                              }}
+                                            />
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   )}
