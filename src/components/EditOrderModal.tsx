@@ -33,6 +33,15 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
   // Pricing & Date states
   const [price, setPrice] = useState(order.price.toString());
   const [discount, setDiscount] = useState((order.discount || 0).toString());
+  const [discountPercent, setDiscountPercent] = useState(() => {
+    const p = order.price || 0;
+    const d = order.discount || 0;
+    if (p > 0 && d > 0) {
+      const pct = (d / p) * 100;
+      return pct.toFixed(1).replace(/\.0$/, '');
+    }
+    return '';
+  });
   const [deposit, setDeposit] = useState(order.deposit.toString());
   const [paymentMethod, setPaymentMethod] = useState(order.paymentMethod || 'เงินโอน');
   const [deliveryDate, setDeliveryDate] = useState(order.deliveryDate || '');
@@ -393,18 +402,23 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                   <input
                     type="number"
                     value={price}
-                    onChange={(e) => setPrice(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPrice(val);
+                      const p = parseFloat(val) || 0;
+                      if (discountPercent) {
+                        const pct = parseFloat(discountPercent) || 0;
+                        const d = Math.round((p * pct) / 100);
+                        setDiscount(d > 0 ? d.toString() : '');
+                      } else if (discount) {
+                        const d = parseFloat(discount) || 0;
+                        if (p > 0) {
+                          const pct = (d / p) * 100;
+                          setDiscountPercent(pct > 0 ? pct.toFixed(1).replace(/\.0$/, '') : '');
+                        }
+                      }
+                    }}
                     className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10 font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-natural-espresso/70 mb-1">ส่วนลดลดเพิ่ม (บาท)</label>
-                  <input
-                    type="number"
-                    value={discount}
-                    onChange={(e) => setDiscount(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10 text-amber-700 font-bold"
                   />
                 </div>
 
@@ -415,6 +429,48 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                     value={deposit}
                     onChange={(e) => setDeposit(e.target.value)}
                     className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-natural-espresso/70 mb-1">ส่วนลดลดเพิ่ม (บาท)</label>
+                  <input
+                    type="number"
+                    value={discount}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDiscount(val);
+                      const p = parseFloat(price) || 0;
+                      const d = parseFloat(val) || 0;
+                      if (p > 0 && d >= 0) {
+                        const pct = (d / p) * 100;
+                        setDiscountPercent(pct > 0 ? pct.toFixed(1).replace(/\.0$/, '') : '');
+                      } else {
+                        setDiscountPercent('');
+                      }
+                    }}
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10 text-amber-700 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-natural-espresso/70 mb-1">ส่วนลดลดเพิ่ม (%)</label>
+                  <input
+                    type="number"
+                    value={discountPercent}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDiscountPercent(val);
+                      const p = parseFloat(price) || 0;
+                      const pct = parseFloat(val) || 0;
+                      if (p > 0 && pct >= 0) {
+                        const d = Math.round((p * pct) / 100);
+                        setDiscount(d > 0 ? d.toString() : '');
+                      } else {
+                        setDiscount('');
+                      }
+                    }}
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/10 text-amber-700 font-bold"
                   />
                 </div>
 

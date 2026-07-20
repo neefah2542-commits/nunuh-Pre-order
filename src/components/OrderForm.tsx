@@ -61,6 +61,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
   const [price, setPrice] = useState('');
   const [deposit, setDeposit] = useState('');
   const [discount, setDiscount] = useState('');
+  const [discountPercent, setDiscountPercent] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [sku, setSku] = useState('');
@@ -219,6 +220,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
       setPrice('');
       setDeposit('');
       setDiscount('');
+      setDiscountPercent('');
       setDeliveryDate('');
       setNotes('');
       setSelectedDesignId('custom');
@@ -1202,7 +1204,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
               <h3 className="font-serif font-bold text-natural-espresso">4. ข้อมูลการเงิน และวันกำหนดส่งชุด (Pricing & Delivery)</h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
               <div>
                 <label className="block text-xs font-medium text-natural-espresso/70 mb-1">ราคาค่าชุดรวมทั้งหมด (บาท) <span className="text-natural-clay">*</span></label>
                 <input
@@ -1210,12 +1212,27 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   required
                   value={price}
                   onChange={(e) => {
-                    setPrice(e.target.value);
+                    const val = e.target.value;
+                    setPrice(val);
                     // auto deposit 50%
-                    if (e.target.value) {
-                      setDeposit((parseInt(e.target.value) / 2).toString());
+                    if (val) {
+                      setDeposit((parseInt(val) / 2).toString());
                     } else {
                       setDeposit('');
+                    }
+
+                    // recalculate discount
+                    const p = parseFloat(val) || 0;
+                    if (discountPercent) {
+                      const pct = parseFloat(discountPercent) || 0;
+                      const d = Math.round((p * pct) / 100);
+                      setDiscount(d > 0 ? d.toString() : '');
+                    } else if (discount) {
+                      const d = parseFloat(discount) || 0;
+                      if (p > 0) {
+                        const pct = (d / p) * 100;
+                        setDiscountPercent(pct > 0 ? pct.toFixed(1).replace(/\.0$/, '') : '');
+                      }
                     }
                   }}
                   placeholder="เช่น 4500"
@@ -1242,9 +1259,42 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                 <input
                   type="number"
                   value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
-                  placeholder="ระบุส่วนลด (ถ้ามี)"
-                  className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDiscount(val);
+                    const p = parseFloat(price) || 0;
+                    const d = parseFloat(val) || 0;
+                    if (p > 0 && d >= 0) {
+                      const pct = (d / p) * 100;
+                      setDiscountPercent(pct > 0 ? pct.toFixed(1).replace(/\.0$/, '') : '');
+                    } else {
+                      setDiscountPercent('');
+                    }
+                  }}
+                  placeholder="ระบุส่วนลด (บาท)"
+                  className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20 text-amber-700 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-natural-espresso/70 mb-1">ส่วนลดพิเศษ (%)</label>
+                <input
+                  type="number"
+                  value={discountPercent}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDiscountPercent(val);
+                    const p = parseFloat(price) || 0;
+                    const pct = parseFloat(val) || 0;
+                    if (p > 0 && pct >= 0) {
+                      const d = Math.round((p * pct) / 100);
+                      setDiscount(d > 0 ? d.toString() : '');
+                    } else {
+                      setDiscount('');
+                    }
+                  }}
+                  placeholder="ระบุส่วนลด (%)"
+                  className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20 text-amber-700 font-bold"
                 />
               </div>
 
