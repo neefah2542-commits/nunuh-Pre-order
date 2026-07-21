@@ -23,6 +23,7 @@ import {
   Clock,
   ArrowRight,
   MessageSquare,
+  History,
   Printer,
   Camera,
   Pencil,
@@ -34,6 +35,7 @@ import {
 } from 'lucide-react';
 import PrintOrderModal from './PrintOrderModal';
 import EditOrderModal from './EditOrderModal';
+import FeedbackSection from './FeedbackSection';
 
 interface OrderTrackerProps {
   orders: Order[];
@@ -83,6 +85,42 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
     const clean = url.trim();
     setLineOaChatUrl(clean);
     localStorage.setItem('nunuh_line_oa_chat_url', clean);
+  };
+
+  const handleAdminAddFeedback = (orderId: string, content: string, sender: 'customer' | 'tailor') => {
+    if (!onEditOrder) return;
+    const orderToUpdate = orders.find(o => o.id === orderId);
+    if (orderToUpdate) {
+      const newMsg = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        sender,
+        content,
+        timestamp: new Date().toISOString()
+      };
+      const updatedOrder = {
+        ...orderToUpdate,
+        feedbacks: [...(orderToUpdate.feedbacks || []), newMsg]
+      };
+      onEditOrder(updatedOrder);
+    }
+  };
+
+  const handleAdminDeleteFeedback = (orderId: string, messageId: string) => {
+    if (!onEditOrder) return;
+    const orderToUpdate = orders.find(o => o.id === orderId);
+    if (orderToUpdate) {
+      const updatedOrder = {
+        ...orderToUpdate,
+        feedbacks: (orderToUpdate.feedbacks || []).filter(msg => msg.id !== messageId)
+      };
+      onEditOrder(updatedOrder);
+    }
+  };
+
+  const getCustomerOtherOrders = (currentOrder: Order) => {
+    const cleanPhone = currentOrder.customerPhone.replace(/[\s-()]/g, '');
+    if (!cleanPhone) return [];
+    return orders.filter(o => o.id !== currentOrder.id && o.customerPhone.replace(/[\s-()]/g, '') === cleanPhone);
   };
 
   const getSocialInfo = (socialStr?: string) => {
@@ -1146,6 +1184,70 @@ export default function OrderTracker({ orders, onUpdateOrderStatus, onDeleteOrde
                               </div>
                             </div>
                           )}
+
+                          {/* Historical Orders & Feedbacks of this customer */}
+                          {(() => {
+                            const otherOrders = getCustomerOtherOrders(order);
+                            if (otherOrders.length === 0) return null;
+                            return (
+                              <div className="pt-2 border-t border-natural-sand/50 space-y-2">
+                                <details className="group bg-natural-sand/10 border border-natural-wheat/40 rounded-xl p-3">
+                                  <summary className="text-xs font-bold font-serif text-natural-espresso flex items-center justify-between cursor-pointer list-none">
+                                    <span className="flex items-center gap-1.5">
+                                      <History className="h-3.5 w-3.5 text-natural-clay animate-pulse" />
+                                      <span>📜 ประวัติสั่งตัด & FEEDBACK ย้อนหลัง ({otherOrders.length} ออเดอร์ก่อนหน้า)</span>
+                                    </span>
+                                    <span className="transition-transform duration-200 group-open:rotate-180 text-[10px]">▼</span>
+                                  </summary>
+                                  <div className="mt-3 space-y-2.5 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
+                                    {otherOrders.map((prev) => {
+                                      const m = prev.measurements;
+                                      const prevFeedbacks = prev.feedbacks || [];
+                                      return (
+                                        <div key={prev.id} className="bg-white p-2.5 rounded-lg border border-natural-sand text-[11px] space-y-1.5">
+                                          <div className="flex justify-between items-center text-[10px] text-natural-espresso/60 font-bold border-b border-natural-sand/50 pb-1">
+                                            <span>ออเดอร์: {prev.orderNumber} ({prev.dressType})</span>
+                                            <span className="font-mono">{prev.orderDate}</span>
+                                          </div>
+                                          
+                                          {/* Mini Measurements */}
+                                          <div className="text-[10px] grid grid-cols-4 gap-1 bg-natural-sand/5 p-1 rounded font-mono text-natural-espresso/80">
+                                            <div>อก: {m.chest}</div>
+                                            <div>เอว: {m.waist}</div>
+                                            <div>สพ: {m.hips}</div>
+                                            <div>ยาว: {m.length}</div>
+                                          </div>
+
+                                          {/* Previous Feedbacks */}
+                                          {prevFeedbacks.length > 0 ? (
+                                            <div className="space-y-1 pt-1 border-t border-dashed border-natural-sand/30">
+                                              <p className="text-[9px] font-bold text-natural-clay/85 uppercase">ประวัติการพูดคุย/ฟีดแบ็ก:</p>
+                                              <div className="bg-natural-sand/5 p-1.5 rounded space-y-1 text-[10px] max-h-24 overflow-y-auto">
+                                                {prevFeedbacks.map((f) => (
+                                                  <div key={f.id} className="leading-relaxed">
+                                                    <strong className={f.sender === 'customer' ? 'text-amber-800' : 'text-natural-clay'}>
+                                                      {f.sender === 'customer' ? 'ลูกค้า: ' : 'ร้านค้า: '}
+                                                    </strong>
+                                                    <span>{f.content}</span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            prev.notes && (
+                                              <p className="text-[10px] text-natural-espresso/60 italic bg-natural-sand/5 p-1 rounded">
+                                                📌 โน้ต: {prev.notes}
+                                              </p>
+                                            )
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </details>
+                              </div>
+                            );
+                          })()}
 
                           <div className="pt-2 flex flex-col sm:flex-row gap-2">
                             <button

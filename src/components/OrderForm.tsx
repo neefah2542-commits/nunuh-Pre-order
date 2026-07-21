@@ -5,15 +5,17 @@
 
 import React, { useState } from 'react';
 import { Order, OrderStatus, Measurements, CatalogueItem, STANDARD_SIZE_CHART } from '../types';
-import { Save, User, Sparkles, Ruler, CreditCard, ChevronRight, Check, Image as ImageIcon, UploadCloud, X } from 'lucide-react';
+import { Save, User, Sparkles, Ruler, CreditCard, ChevronRight, Check, Image as ImageIcon, UploadCloud, X, History, Database, MessageSquare } from 'lucide-react';
+import { compressImage } from '../utils/image';
 
 interface OrderFormProps {
   catalogue: CatalogueItem[];
   onAddOrder: (newOrder: Order) => void;
   nextOrderNumber: string;
+  orders?: Order[];
 }
 
-export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: OrderFormProps) {
+export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber, orders = [] }: OrderFormProps) {
   // ฟอร์มแบ่งออกเป็น 4 ส่วนหลักเพื่อความเป็นระเบียบเรียบร้อย (Bento layout)
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -75,6 +77,54 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // ค้นหาประวัติออเดอร์เดิมของลูกค้าตามเบอร์โทรศัพท์หรือชื่อ
+  const getPastCustomerOrders = () => {
+    if (!orders || orders.length === 0) return [];
+    const cleanInputPhone = customerPhone.replace(/[\s-()]/g, '');
+    if (!cleanInputPhone && !customerName.trim()) return [];
+
+    return orders.filter(o => {
+      if (cleanInputPhone) {
+        const cleanOrderPhone = o.customerPhone.replace(/[\s-()]/g, '');
+        return cleanOrderPhone === cleanInputPhone;
+      }
+      if (customerName.trim()) {
+        return o.customerName.toLowerCase().includes(customerName.trim().toLowerCase());
+      }
+      return false;
+    });
+  };
+
+  const pastCustomerOrders = getPastCustomerOrders();
+
+  const handleApplyPastMeasurements = (pastOrder: Order) => {
+    const m = pastOrder.measurements;
+    setChest(m.chest !== '-' ? m.chest : '');
+    setWaist(m.waist !== '-' ? m.waist : '');
+    setHips(m.hips !== '-' ? m.hips : '');
+    setShoulder(m.shoulder !== '-' ? m.shoulder : '');
+    setSleeveLength(m.sleeveLength !== '-' ? m.sleeveLength : '');
+    setArmhole(m.armhole !== '-' ? m.armhole : '');
+    setLength(m.length !== '-' ? m.length : '');
+    setNeck(m.neck && m.neck !== '-' ? m.neck : '');
+    setHeight(m.height !== '-' ? m.height : '');
+    setWeight(m.weight !== '-' ? m.weight : '');
+    setFrontChest(m.frontChest && m.frontChest !== '-' ? m.frontChest : '');
+    setBackChest(m.backChest && m.backChest !== '-' ? m.backChest : '');
+    setFrontLength(m.frontLength && m.frontLength !== '-' ? m.frontLength : '');
+    setBackLength(m.backLength && m.backLength !== '-' ? m.backLength : '');
+    setWrist(m.wrist && m.wrist !== '-' ? m.wrist : '');
+    setOtherNotes(m.otherNotes || '');
+    if (m.standardSize) {
+      setSelectedSize(m.standardSize);
+    }
+    // ดึงข้อมูลอื่นเพิ่มเติมหากว่างอยู่
+    if (!customerSocial && pastOrder.customerSocial) setCustomerSocial(pastOrder.customerSocial);
+    if (!lineUserId && pastOrder.lineUserId) setLineUserId(pastOrder.lineUserId);
+    if (pastOrder.customerCategory) setCustomerCategory(pastOrder.customerCategory);
+    if (pastOrder.membershipTier) setMembershipTier(pastOrder.membershipTier);
+  };
+
   // จัดการเมื่อเลือกแบบในแคตตาล็อก
   const handleSelectDesign = (designId: string) => {
     setSelectedDesignId(designId);
@@ -102,6 +152,29 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
       }
     } else {
       setSku('');
+    }
+  };
+
+  const handleSkuChange = (newSku: string) => {
+    setSku(newSku);
+    const matched = catalogue.find(item => item.sku && item.sku.toUpperCase() === newSku.toUpperCase().trim());
+    if (matched) {
+      setSelectedDesignId(matched.id);
+      setDressType(matched.category === 'Abaya' ? 'อาบายะห์' : 'เดรสราตรี');
+      setFabricType(matched.fabricRecommend.split(' & ')[0] || '');
+      
+      if (selectedSize && matched.sizePrices && matched.sizePrices[selectedSize]) {
+        const customPrice = matched.sizePrices[selectedSize];
+        setPrice(customPrice.toString());
+        setDeposit((customPrice / 2).toString());
+      } else {
+        const numMatch = matched.priceRange.match(/\d+,\d+/g);
+        if (numMatch && numMatch[0]) {
+          const cleanNum = numMatch[0].replace(',', '');
+          setPrice(cleanNum);
+          setDeposit((parseInt(cleanNum) / 2).toString());
+        }
+      }
     }
   };
 
@@ -237,7 +310,7 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
     }, 2000);
   };
 
-  const handleSizeChange = (size: string) => {
+  const handleSizeChange = (size: string, isIdh: boolean = false) => {
     setSelectedSize(size);
     if (size && STANDARD_SIZE_CHART[size]) {
       const config = STANDARD_SIZE_CHART[size];
@@ -247,13 +320,35 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
       setShoulder(config.shoulder);
       setSleeveLength(config.sleeveLength);
       setLength(config.length);
+    } else if (isIdh) {
+      setChest('');
+      setWaist('');
+      setHips('');
+      setShoulder('');
+      setSleeveLength('');
+      setArmhole('');
+      setLength('');
+      setNeck('');
+      setHeight('');
+      setWeight('');
+      setFrontChest('');
+      setBackChest('');
+      setFrontLength('');
+      setBackLength('');
+      setWrist('');
     }
 
     // อัปเดตราคาและเงินมัดจำหากแบบชุดที่เลือกมีราคาเฉพาะไซส์นี้ตั้งไว้
-    if (selectedDesignId !== 'custom' && size) {
-      const selected = catalogue.find(item => item.id === selectedDesignId);
-      if (selected && selected.sizePrices && selected.sizePrices[size]) {
-        const customPrice = selected.sizePrices[size];
+    if (size) {
+      let targetDesign = null;
+      if (selectedDesignId !== 'custom') {
+        targetDesign = catalogue.find(item => item.id === selectedDesignId);
+      } else if (sku) {
+        targetDesign = catalogue.find(item => item.sku && item.sku.toUpperCase() === sku.toUpperCase().trim());
+      }
+
+      if (targetDesign && targetDesign.sizePrices && targetDesign.sizePrices[size]) {
+        const customPrice = targetDesign.sizePrices[size];
         setPrice(customPrice.toString());
         setDeposit((customPrice / 2).toString());
       }
@@ -407,6 +502,77 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   </p>
                 </div>
 
+                {/* ประวัติและฟีดแบ็กเดิมของลูกค้า (Customer History & Feedback Lookup) */}
+                {pastCustomerOrders.length > 0 && (
+                  <div className="p-3.5 bg-amber-50/60 border border-amber-200/50 rounded-xl space-y-3 mt-2 animate-fadeIn">
+                    <div className="flex items-center justify-between border-b border-amber-200/30 pb-2">
+                      <div className="flex items-center space-x-2 text-amber-950">
+                        <History className="h-4 w-4 text-natural-clay" />
+                        <span className="text-xs font-bold font-serif">✨ ประวัติและ FEEDBACK ของลูกค้าท่านนี้ ({pastCustomerOrders.length} รายการ)</span>
+                      </div>
+                      <span className="text-[9px] bg-natural-clay/10 text-natural-clay font-bold px-2 py-0.5 rounded-full">พบคลังข้อมูล</span>
+                    </div>
+
+                    <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                      {pastCustomerOrders.map((past) => {
+                        const m = past.measurements;
+                        const feedbacks = past.feedbacks || [];
+                        return (
+                          <div key={past.id} className="bg-white p-2.5 rounded-lg border border-amber-200/30 shadow-3xs space-y-2">
+                            <div className="flex items-center justify-between text-[10px]">
+                              <span className="font-bold text-natural-espresso">ออเดอร์: <span className="font-mono text-xs">{past.orderNumber}</span> ({past.dressType})</span>
+                              <span className="text-natural-espresso/50 font-mono">{past.orderDate}</span>
+                            </div>
+
+                            {/* Measurements Quick Preview */}
+                            <div className="bg-natural-sand/10 p-1.5 rounded text-[10px] grid grid-cols-4 gap-x-2 gap-y-1 text-natural-espresso/80 font-mono">
+                              <div>อก: <span className="font-bold">{m.chest || '-'}</span></div>
+                              <div>เอว: <span className="font-bold">{m.waist || '-'}</span></div>
+                              <div>สพ: <span className="font-bold">{m.hips || '-'}</span></div>
+                              <div>ยาว: <span className="font-bold">{m.length || '-'}</span></div>
+                            </div>
+
+                            {/* Feedbacks in this order */}
+                            {feedbacks.length > 0 ? (
+                              <div className="space-y-1 border-t border-natural-sand/20 pt-1.5">
+                                <span className="text-[9px] font-bold text-natural-clay uppercase tracking-wider flex items-center">
+                                  <MessageSquare className="h-2.5 w-2.5 mr-1" /> ประวัติฟีดแบ็กของออเดอร์นี้:
+                                </span>
+                                <div className="space-y-1 max-h-24 overflow-y-auto bg-natural-sand/5 p-1 rounded border border-natural-wheat/20 text-[9px]">
+                                  {feedbacks.map((f) => (
+                                    <div key={f.id} className="leading-tight text-natural-espresso/85">
+                                      <strong className={f.sender === 'customer' ? 'text-amber-800' : 'text-natural-clay'}>
+                                        {f.sender === 'customer' ? 'ลูกค้า: ' : 'ร้านค้า: '}
+                                      </strong>
+                                      <span>{f.content}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              past.notes && (
+                                <div className="text-[9.5px] text-natural-espresso/70 italic bg-natural-sand/5 p-1 rounded">
+                                  📌 โน้ต: {past.notes}
+                                </div>
+                              )
+                            )}
+
+                            {/* Action Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleApplyPastMeasurements(past)}
+                              className="w-full text-center py-1.5 bg-natural-espresso hover:bg-natural-clay text-white rounded text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center space-x-1"
+                            >
+                              <Database className="h-3.5 w-3.5" />
+                              <span>📥 ดึงสัดส่วนและโปรไฟล์ลูกค้ามาใส่ฟอร์ม</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
 
 
                 {/* ประเภทงาน */}
@@ -487,10 +653,18 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                   <input
                     type="text"
                     value={sku}
-                    onChange={(e) => setSku(e.target.value)}
+                    onChange={(e) => handleSkuChange(e.target.value)}
                     placeholder="เช่น NNH-MKB-06"
+                    list="sku-suggestions"
                     className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20 font-mono uppercase font-bold text-natural-clay"
                   />
+                  <datalist id="sku-suggestions">
+                    {catalogue.map((item) => (
+                      <option key={item.id} value={item.sku}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
 
                 <div>
@@ -500,8 +674,30 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                     value={fabricColor}
                     onChange={(e) => setFabricColor(e.target.value)}
                     placeholder="เช่น กรมท่าเข้ม, นู้ดชมพูอ่อน, แดงเบอร์กันดี"
+                    list="color-suggestions"
                     className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
                   />
+                  <datalist id="color-suggestions">
+                    <option value="ตามแบบ" />
+                    <option value="กรมท่าเข้ม" />
+                    <option value="นู้ดชมพูอ่อน" />
+                    <option value="แดงเบอร์กันดี" />
+                    <option value="ชมพูกลีบบัว" />
+                    <option value="สีกะปิ" />
+                    <option value="เทาอมฟ้า" />
+                    <option value="เทาเงิน" />
+                    <option value="น้ำตาลทอง" />
+                    <option value="น้ำตาลช็อกโกแลต" />
+                    <option value="ชมพูพีช" />
+                    <option value="ดำสนิท" />
+                    <option value="เขียวเอมเมอรัลด์" />
+                    <option value="Midnight Black & Gold" />
+                    <option value="Emerald Green" />
+                    <option value="Dusty Rose" />
+                    <option value="Off-White Cream" />
+                    <option value="Lavender Mist" />
+                    <option value="Ruby Burgundy" />
+                  </datalist>
                 </div>
 
                 {/* อัปโหลดรูปภาพที่ลูกค้าจะสั่งตัด */}
@@ -546,11 +742,12 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setCustomImage(reader.result as string);
-                                };
-                                reader.readAsDataURL(file);
+                                compressImage(file, 800, 800, 0.75)
+                                  .then(setCustomImage)
+                                  .catch((err) => {
+                                    console.error(err);
+                                    alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                                  });
                               }
                             }}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -599,11 +796,12 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setCustomImage2(reader.result as string);
-                                };
-                                reader.readAsDataURL(file);
+                                compressImage(file, 800, 800, 0.75)
+                                  .then(setCustomImage2)
+                                  .catch((err) => {
+                                    console.error(err);
+                                    alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                                  });
                               }
                             }}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -638,285 +836,345 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
               </span>
             </div>
 
-            {/* เลือกไซส์มาตรฐาน */}
-            <div className="bg-natural-sand/20 p-4 rounded-xl border border-natural-wheat/60 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h4 className="text-xs font-bold text-natural-espresso flex items-center space-x-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-natural-ochre" />
-                    <span>เลือกไซส์มาตรฐาน (Standard Size Preset)</span>
-                  </h4>
-                  <p className="text-[10px] text-natural-espresso/60">
-                    เลือกไซส์มาตรฐานเพื่อกรอกข้อมูลสัดส่วนโดยอัตโนมัติ (สามารถปรับสัดส่วนหลวม/แน่น เพิ่มได้ทีละช่องหลังจากกด)
-                  </p>
+            {customerCategory === 'IDH' ? (
+              <div className="bg-amber-50/40 p-5 rounded-xl border border-amber-200/50 space-y-4 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/30 pb-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-natural-espresso flex items-center space-x-2">
+                      <Sparkles className="h-4 w-4 text-natural-clay" />
+                      <span>กดเลือกไซส์ผ้าคลุม (IDH Hijab Size Selection)</span>
+                    </h4>
+                    <p className="text-xs text-natural-espresso/60 mt-1">
+                      เมื่อลูกค้าสั่งตัดผ้าคลุม (IDH) ไม่จำเป็นต้องระบุรายละเอียดสัดส่วนตัวค่ะ โปรดเลือกไซส์ผ้าคลุมที่ต้องการด้านล่างนี้ได้เลยค่ะ
+                    </p>
+                  </div>
+                  <span className="text-[10px] bg-natural-clay/10 text-natural-clay border border-natural-clay/20 px-3 py-1 rounded-full font-bold">
+                    ไซส์ผ้าคลุม IDH 🧕
+                  </span>
                 </div>
-                <span className="text-[10px] bg-natural-clay/10 text-natural-clay border border-natural-clay/20 px-2.5 py-0.5 rounded-full font-bold">
-                  ตาราง SIZE มาตรฐาน NUNUH 👗
-                </span>
-              </div>
 
-              {/* ปุ่มเลือกไซส์ */}
-              <div className="flex flex-wrap gap-2">
-                {(() => {
-                  const matchedItem = selectedDesignId !== 'custom' ? catalogue.find(item => item.id === selectedDesignId) : null;
-                  return Object.keys(STANDARD_SIZE_CHART).map((size) => {
+                {/* ปุ่มเลือกไซส์ผ้าคลุม */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  {['SS', 'S', 'M', 'L', 'XL', 'XXL'].map((size) => {
                     const isSelected = selectedSize === size;
-                    const isRecommended = matchedItem && matchedItem.sizes ? matchedItem.sizes.includes(size) : false;
                     return (
                       <button
                         key={size}
                         type="button"
-                        onClick={() => handleSizeChange(size)}
-                        className={`px-3 py-1.5 text-xs font-serif font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center min-w-[55px] border relative ${
+                        onClick={() => handleSizeChange(size, true)}
+                        className={`px-5 py-3 text-sm font-serif font-black rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center min-w-[70px] shadow-2xs ${
                           isSelected
-                            ? 'bg-natural-clay text-white border-natural-clay shadow-xs'
-                            : isRecommended
-                              ? 'bg-natural-ochre/5 hover:bg-natural-ochre/15 text-natural-espresso border-natural-ochre/40'
-                              : 'bg-white hover:bg-natural-sand/40 text-natural-espresso border-natural-wheat hover:border-natural-clay/30'
+                            ? 'bg-natural-clay text-white border-natural-clay scale-105 shadow-md ring-2 ring-natural-clay/20'
+                            : 'bg-white hover:bg-natural-sand/25 text-natural-espresso border-natural-wheat hover:border-natural-clay/30'
                         }`}
                       >
-                        <span className="text-xs flex items-center gap-0.5">
-                          {size}
-                          {isRecommended && (
-                            <span className="text-[8px] bg-natural-ochre text-white px-0.5 py-px rounded-xs leading-none font-sans" title="ไซส์ตรงปกแบบชุดนี้">
-                              ★
-                            </span>
-                          )}
-                        </span>
-                        <span className={`text-[9px] mt-0.5 font-sans font-medium ${isSelected ? 'text-white/80' : isRecommended ? 'text-natural-ochre' : 'text-natural-espresso/45'}`}>
-                          อก {STANDARD_SIZE_CHART[size].chest}"
+                        <span className="text-sm">{size}</span>
+                        <span className={`text-[9px] mt-0.5 font-sans font-medium ${isSelected ? 'text-white/80' : 'text-natural-espresso/45'}`}>
+                          ผ้าคลุม IDH
                         </span>
                       </button>
                     );
-                  });
-                })()}
-                <button
-                  type="button"
-                  onClick={() => handleSizeChange('')}
-                  className={`px-3 py-1 text-xs font-serif font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center justify-center min-w-[55px] border ${
-                    !selectedSize
-                      ? 'bg-natural-clay text-white border-natural-clay shadow-xs'
-                      : 'bg-white hover:bg-natural-sand/40 text-natural-espresso border-natural-wheat hover:border-natural-clay/30'
-                  }`}
-                >
-                  <span className="text-xs">CUSTOM</span>
-                  <span className={`text-[9px] mt-0.5 font-sans font-medium ${!selectedSize ? 'text-white/80' : 'text-natural-espresso/45'}`}>
-                    วัดตัวพิเศษ
-                  </span>
-                </button>
-              </div>
+                  })}
+                </div>
 
-              {/* ตารางเปรียบเทียบด่วน */}
-              <div className="overflow-x-auto rounded-lg border border-natural-wheat bg-white text-[10px]">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-natural-sand/40 text-natural-espresso font-bold border-b border-natural-wheat">
-                      <th className="p-1.5 text-center font-serif">ไซส์</th>
-                      <th className="p-1.5 text-center">รอบอก (Chest)</th>
-                      <th className="p-1.5 text-center">รอบเอว (Waist)</th>
-                      <th className="p-1.5 text-center">สะโพก (Hips)</th>
-                      <th className="p-1.5 text-center">ไหล่ (Shoulder)</th>
-                      <th className="p-1.5 text-center">แขนยาว (Sleeve)</th>
-                      <th className="p-1.5 text-center">ชุดยาว (Length)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(STANDARD_SIZE_CHART).map(([size, config]) => (
-                      <tr 
-                        key={size} 
-                        onClick={() => handleSizeChange(size)}
-                        className={`border-b border-natural-sand/50 hover:bg-natural-sand/15 transition-colors cursor-pointer text-center ${
-                          selectedSize === size ? 'bg-natural-clay/5 font-bold text-natural-clay' : 'text-natural-espresso/85'
-                        }`}
-                      >
-                        <td className="p-1 text-center font-serif font-bold bg-natural-sand/10 border-r border-natural-sand/50">{size}</td>
-                        <td className="p-1">{config.chest}"</td>
-                        <td className="p-1">{config.waist}"</td>
-                        <td className="p-1">{config.hips}"</td>
-                        <td className="p-1">{config.shoulder}"</td>
-                        <td className="p-1">{config.sleeveLength}"</td>
-                        <td className="p-1">{config.length}"</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                <div className="bg-white p-3.5 rounded-xl border border-amber-200/40 text-xs text-amber-900/80 leading-relaxed">
+                  💡 <strong>ข้อมูลเพิ่มเติม:</strong> การเลือกไซส์ผ้าคลุม <span className="font-bold">{selectedSize || '(ยังไม่ได้เลือก)'}</span> จะทำการกำหนดสัดส่วนผ้าคลุมโดยอัตโนมัติ ช่างแพทเทิร์นจะใช้ข้อมูลขนาดมาตรฐานของผ้าคลุม NUNUH เพื่อจัดเตรียมและตัดเย็บค่ะ หากมีรายละเอียดส่วนสูงหรือข้อกำหนดพิเศษเพิ่มเติม สามารถบันทึกในช่องด้านล่างได้เลยค่ะ
+                </div>
 
-            {/* คำอธิบายเรื่องหน่วยวัดตัว */}
-            <div className="bg-natural-sand/20 border border-natural-wheat/60 p-3 rounded-xl text-xs text-natural-espresso/80 space-y-1">
-              <p className="font-bold text-natural-clay flex items-center gap-1.5">
-                <Ruler className="h-4 w-4" />
-                <span>คำชี้แจงเกี่ยวกับหน่วยวัดสัดส่วน (Measurement Unit Guidelines):</span>
-              </p>
-              <ul className="list-disc list-inside space-y-1 pl-1 text-[11px]">
-                <li>
-                  <span className="font-semibold text-natural-espresso">ตารางไซส์มาตรฐาน (ตารางด้านบน):</span> อ้างอิงและแสดงขนาดเป็นหน่วย <strong className="text-natural-clay font-bold">นิ้ว (″)</strong> ตามมาตรฐานชุดสำเร็จรูป
-                </li>
-                <li>
-                  <span className="font-semibold text-natural-espresso">ช่องกรอกข้อมูลสัดส่วนเฉพาะบุคคล (ช่องกรอกด้านล่าง):</span> กรณีท่านระบุสัดส่วนที่ <strong className="text-natural-clay font-bold">วัดตัวด้วยตนเอง (Custom)</strong> กรุณากรอกตัวเลขโดยใช้หน่วยเป็น <strong className="text-natural-clay font-bold">เซนติเมตร (ซม.)</strong> เพื่อความละเอียดสูงสุดในการตัดเย็บ
-                </li>
-              </ul>
-            </div>
+                <div className="pt-2">
+                  <label className="block text-xs font-medium text-natural-espresso/70 mb-1">รายละเอียดการวัดตัวและสัดส่วนเพิ่มเติม (สำหรับผ้าคลุม)</label>
+                  <textarea
+                    value={otherNotes}
+                    onChange={(e) => setOtherNotes(e.target.value)}
+                    placeholder="เช่น ความยาวหน้าผ้าคลุมยาวเป็นพิเศษ, ต้องการผ่าข้างแขน หรือดีเทลอื่นๆ..."
+                    rows={2}
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-white"
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* เลือกไซส์มาตรฐาน */}
+                <div className="bg-natural-sand/20 p-4 rounded-xl border border-natural-wheat/60 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="text-xs font-bold text-natural-espresso flex items-center space-x-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-natural-ochre" />
+                        <span>เลือกไซส์มาตรฐาน (Standard Size Preset)</span>
+                      </h4>
+                      <p className="text-[10px] text-natural-espresso/60">
+                        เลือกไซส์มาตรฐานเพื่อกรอกข้อมูลสัดส่วนโดยอัตโนมัติ (สามารถปรับสัดส่วนหลวม/แน่น เพิ่มได้ทีละช่องหลังจากกด)
+                      </p>
+                    </div>
+                    <span className="text-[10px] bg-natural-clay/10 text-natural-clay border border-natural-clay/20 px-2.5 py-0.5 rounded-full font-bold">
+                      ตาราง SIZE มาตรฐาน NUNUH 👗
+                    </span>
+                  </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">รอบอก (Chest)</label>
-                <input
-                  type="text"
-                  value={chest}
-                  onChange={(e) => setChest(e.target.value)}
-                  placeholder="เช่น 86"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">รอบเอว (Waist)</label>
-                <input
-                  type="text"
-                  value={waist}
-                  onChange={(e) => setWaist(e.target.value)}
-                  placeholder="เช่น 76"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">สะโพก (Hips)</label>
-                <input
-                  type="text"
-                  value={hips}
-                  onChange={(e) => setHips(e.target.value)}
-                  placeholder="เช่น 97"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ไหล่กว้าง (Shoulder)</label>
-                <input
-                  type="text"
-                  value={shoulder}
-                  onChange={(e) => setShoulder(e.target.value)}
-                  placeholder="เช่น 38"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ความยาวแขน (Sleeve)</label>
-                <input
-                  type="text"
-                  value={sleeveLength}
-                  onChange={(e) => setSleeveLength(e.target.value)}
-                  placeholder="เช่น 56"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">วงแขน (Armhole)</label>
-                <input
-                  type="text"
-                  value={armhole}
-                  onChange={(e) => setArmhole(e.target.value)}
-                  placeholder="เช่น 38"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ความยาวชุด (Length)</label>
-                <input
-                  type="text"
-                  value={length}
-                  onChange={(e) => setLength(e.target.value)}
-                  placeholder="เช่น 137"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
+                  {/* ปุ่มเลือกไซส์ */}
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      const matchedItem = selectedDesignId !== 'custom' ? catalogue.find(item => item.id === selectedDesignId) : null;
+                      return Object.keys(STANDARD_SIZE_CHART).map((size) => {
+                        const isSelected = selectedSize === size;
+                        const isRecommended = matchedItem && matchedItem.sizes ? matchedItem.sizes.includes(size) : false;
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => handleSizeChange(size)}
+                            className={`px-3 py-1.5 text-xs font-serif font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center min-w-[55px] border relative ${
+                              isSelected
+                                ? 'bg-natural-clay text-white border-natural-clay shadow-xs'
+                                : isRecommended
+                                  ? 'bg-natural-ochre/5 hover:bg-natural-ochre/15 text-natural-espresso border-natural-ochre/40'
+                                  : 'bg-white hover:bg-natural-sand/40 text-natural-espresso border-natural-wheat hover:border-natural-clay/30'
+                            }`}
+                          >
+                            <span className="text-xs flex items-center gap-0.5">
+                              {size}
+                              {isRecommended && (
+                                <span className="text-[8px] bg-natural-ochre text-white px-0.5 py-px rounded-xs leading-none font-sans" title="ไซส์ตรงปกแบบชุดนี้">
+                                  ★
+                                </span>
+                              )}
+                            </span>
+                            <span className={`text-[9px] mt-0.5 font-sans font-medium ${isSelected ? 'text-white/80' : isRecommended ? 'text-natural-ochre' : 'text-natural-espresso/45'}`}>
+                              อก {STANDARD_SIZE_CHART[size].chest}"
+                            </span>
+                          </button>
+                        );
+                      });
+                    })()}
+                    <button
+                      type="button"
+                      onClick={() => handleSizeChange('')}
+                      className={`px-3 py-1 text-xs font-serif font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center justify-center min-w-[55px] border ${
+                        !selectedSize
+                          ? 'bg-natural-clay text-white border-natural-clay shadow-xs'
+                          : 'bg-white hover:bg-natural-sand/40 text-natural-espresso border-natural-wheat hover:border-natural-clay/30'
+                      }`}
+                    >
+                      <span className="text-xs">CUSTOM</span>
+                      <span className={`text-[9px] mt-0.5 font-sans font-medium ${!selectedSize ? 'text-white/80' : 'text-natural-espresso/45'}`}>
+                        วัดตัวพิเศษ
+                      </span>
+                    </button>
+                  </div>
 
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ส่วนสูง ซม. (Height)</label>
-                <input
-                  type="text"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  placeholder="เช่น 160"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">น้ำหนัก กก. (Weight)</label>
-                <input
-                  type="text"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="เช่น 52"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">บ่าหน้า (Front Chest)</label>
-                <input
-                  type="text"
-                  value={frontChest}
-                  onChange={(e) => setFrontChest(e.target.value)}
-                  placeholder="เช่น 34"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">บ่าหลัง (Back Chest)</label>
-                <input
-                  type="text"
-                  value={backChest}
-                  onChange={(e) => setBackChest(e.target.value)}
-                  placeholder="เช่น 36"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ยาวหน้า (Front Length)</label>
-                <input
-                  type="text"
-                  value={frontLength}
-                  onChange={(e) => setFrontLength(e.target.value)}
-                  placeholder="เช่น 35"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ยาวหลัง (Back Length)</label>
-                <input
-                  type="text"
-                  value={backLength}
-                  onChange={(e) => setBackLength(e.target.value)}
-                  placeholder="เช่น 38"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ข้อมือ (Wrist)</label>
-                <input
-                  type="text"
-                  value={wrist}
-                  onChange={(e) => setWrist(e.target.value)}
-                  placeholder="เช่น 15"
-                  className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
-                />
-              </div>
-              <div className="col-span-2 sm:col-span-1">
-                <label className="block text-[11px] font-medium text-natural-espresso/40 mb-1">เก็บค่าข้อมูลย่อย</label>
-                <span className="text-xs text-natural-espresso/50 block pt-2 text-center font-medium">กรอกเสร็จในตารางย่อย</span>
-              </div>
-            </div>
+                  {/* ตารางเปรียบเทียบด่วน */}
+                  <div className="overflow-x-auto rounded-lg border border-natural-wheat bg-white text-[10px]">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-natural-sand/40 text-natural-espresso font-bold border-b border-natural-wheat">
+                          <th className="p-1.5 text-center font-serif">ไซส์</th>
+                          <th className="p-1.5 text-center">รอบอก (Chest)</th>
+                          <th className="p-1.5 text-center">รอบเอว (Waist)</th>
+                          <th className="p-1.5 text-center">สะโพก (Hips)</th>
+                          <th className="p-1.5 text-center">ไหล่ (Shoulder)</th>
+                          <th className="p-1.5 text-center">แขนยาว (Sleeve)</th>
+                          <th className="p-1.5 text-center">ชุดยาว (Length)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(STANDARD_SIZE_CHART).map(([size, config]) => (
+                          <tr 
+                            key={size} 
+                            onClick={() => handleSizeChange(size)}
+                            className={`border-b border-natural-sand/50 hover:bg-natural-sand/15 transition-colors cursor-pointer text-center ${
+                              selectedSize === size ? 'bg-natural-clay/5 font-bold text-natural-clay' : 'text-natural-espresso/85'
+                            }`}
+                          >
+                            <td className="p-1 text-center font-serif font-bold bg-natural-sand/10 border-r border-natural-sand/50">{size}</td>
+                            <td className="p-1">{config.chest}"</td>
+                            <td className="p-1">{config.waist}"</td>
+                            <td className="p-1">{config.hips}"</td>
+                            <td className="p-1">{config.shoulder}"</td>
+                            <td className="p-1">{config.sleeveLength}"</td>
+                            <td className="p-1">{config.length}"</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-xs font-medium text-natural-espresso/70 mb-1">รายละเอียดการวัดตัวและสัดส่วนเพิ่มเติม</label>
-              <textarea
-                value={otherNotes}
-                onChange={(e) => setOtherNotes(e.target.value)}
-                placeholder="เช่น ต้องการเสริมฟองน้ำบริเวณหน้าอก, ไหล่เอียงขวาเล็กน้อย, ต้องการปรับสัดส่วนหลวมหน้าท้องเพื่อใส่คลุมสบาย..."
-                rows={2}
-                className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
-              />
-            </div>
+                {/* คำอธิบายเรื่องหน่วยวัดตัว */}
+                <div className="bg-natural-sand/20 border border-natural-wheat/60 p-3 rounded-xl text-xs text-natural-espresso/80 space-y-1">
+                  <p className="font-bold text-natural-clay flex items-center gap-1.5">
+                    <Ruler className="h-4 w-4" />
+                    <span>คำชี้แจงเกี่ยวกับหน่วยวัดสัดส่วน (Measurement Unit Guidelines):</span>
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 pl-1 text-[11px]">
+                    <li>
+                      <span className="font-semibold text-natural-espresso">ตารางไซส์มาตรฐาน (ตารางด้านบน):</span> อ้างอิงและแสดงขนาดเป็นหน่วย <strong className="text-natural-clay font-bold">นิ้ว (″)</strong> ตามมาตรฐานชุดสำเร็จรูป
+                    </li>
+                    <li>
+                      <span className="font-semibold text-natural-espresso">ช่องกรอกข้อมูลสัดส่วนเฉพาะบุคคล (ช่องกรอกด้านล่าง):</span> กรณีท่านระบุสัดส่วนที่ <strong className="text-natural-clay font-bold">วัดตัวด้วยตนเอง (Custom)</strong> กรุณากรอกตัวเลขโดยใช้หน่วยเป็น <strong className="text-natural-clay font-bold">เซนติเมตร (ซม.)</strong> เพื่อความละเอียดสูงสุดในการตัดเย็บ
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">รอบอก (Chest)</label>
+                    <input
+                      type="text"
+                      value={chest}
+                      onChange={(e) => setChest(e.target.value)}
+                      placeholder="เช่น 86"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">รอบเอว (Waist)</label>
+                    <input
+                      type="text"
+                      value={waist}
+                      onChange={(e) => setWaist(e.target.value)}
+                      placeholder="เช่น 76"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">สะโพก (Hips)</label>
+                    <input
+                      type="text"
+                      value={hips}
+                      onChange={(e) => setHips(e.target.value)}
+                      placeholder="เช่น 97"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ไหล่กว้าง (Shoulder)</label>
+                    <input
+                      type="text"
+                      value={shoulder}
+                      onChange={(e) => setShoulder(e.target.value)}
+                      placeholder="เช่น 38"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ความยาวแขน (Sleeve)</label>
+                    <input
+                      type="text"
+                      value={sleeveLength}
+                      onChange={(e) => setSleeveLength(e.target.value)}
+                      placeholder="เช่น 56"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">วงแขน (Armhole)</label>
+                    <input
+                      type="text"
+                      value={armhole}
+                      onChange={(e) => setArmhole(e.target.value)}
+                      placeholder="เช่น 38"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ความยาวชุด (Length)</label>
+                    <input
+                      type="text"
+                      value={length}
+                      onChange={(e) => setLength(e.target.value)}
+                      placeholder="เช่น 137"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ส่วนสูง ซม. (Height)</label>
+                    <input
+                      type="text"
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                      placeholder="เช่น 160"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">น้ำหนัก กก. (Weight)</label>
+                    <input
+                      type="text"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      placeholder="เช่น 52"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">บ่าหน้า (Front Chest)</label>
+                    <input
+                      type="text"
+                      value={frontChest}
+                      onChange={(e) => setFrontChest(e.target.value)}
+                      placeholder="เช่น 34"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">บ่าหลัง (Back Chest)</label>
+                    <input
+                      type="text"
+                      value={backChest}
+                      onChange={(e) => setBackChest(e.target.value)}
+                      placeholder="เช่น 36"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ยาวหน้า (Front Length)</label>
+                    <input
+                      type="text"
+                      value={frontLength}
+                      onChange={(e) => setFrontLength(e.target.value)}
+                      placeholder="เช่น 35"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ยาวหลัง (Back Length)</label>
+                    <input
+                      type="text"
+                      value={backLength}
+                      onChange={(e) => setBackLength(e.target.value)}
+                      placeholder="เช่น 38"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-natural-espresso/60 mb-1">ข้อมือ (Wrist)</label>
+                    <input
+                      type="text"
+                      value={wrist}
+                      onChange={(e) => setWrist(e.target.value)}
+                      placeholder="เช่น 15"
+                      className="w-full text-center text-sm px-2 py-1.5 rounded-lg border border-natural-wheat bg-natural-cream/20 focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay"
+                    />
+                  </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-[11px] font-medium text-natural-espresso/40 mb-1">เก็บค่าข้อมูลย่อย</label>
+                    <span className="text-xs text-natural-espresso/50 block pt-2 text-center font-medium">กรอกเสร็จในตารางย่อย</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-natural-espresso/70 mb-1">รายละเอียดการวัดตัวและสัดส่วนเพิ่มเติม</label>
+                  <textarea
+                    value={otherNotes}
+                    onChange={(e) => setOtherNotes(e.target.value)}
+                    placeholder="เช่น ต้องการเสริมฟองน้ำบริเวณหน้าอก, ไหล่เอียงขวาเล็กน้อย, ต้องการปรับสัดส่วนหลวมหน้าท้องเพื่อใส่คลุมสบาย..."
+                    rows={2}
+                    className="w-full text-sm px-3 py-2 rounded-xl border border-natural-wheat focus:outline-none focus:ring-2 focus:ring-natural-clay/20 focus:border-natural-clay bg-natural-cream/20"
+                  />
+                </div>
+              </>
+            )}
 
             {/* รูปถ่ายสัดส่วนลูกค้า (ด้านหน้า, ด้านข้าง, ด้านหลัง) */}
             <div className="pt-4 border-t border-natural-sand/55 space-y-3">
@@ -959,11 +1217,12 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCustomerPhotoFront(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
+                            compressImage(file, 800, 800, 0.75)
+                              .then(setCustomerPhotoFront)
+                              .catch((err) => {
+                                console.error(err);
+                                alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                              });
                           }
                         }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1003,11 +1262,12 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCustomerPhotoSide(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
+                            compressImage(file, 800, 800, 0.75)
+                              .then(setCustomerPhotoSide)
+                              .catch((err) => {
+                                console.error(err);
+                                alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                              });
                           }
                         }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1047,11 +1307,12 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCustomerPhotoBack(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
+                            compressImage(file, 800, 800, 0.75)
+                              .then(setCustomerPhotoBack)
+                              .catch((err) => {
+                                console.error(err);
+                                alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                              });
                           }
                         }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1260,11 +1521,12 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber }: Or
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setSlipImage(reader.result as string);
-                        };
-                        reader.readAsDataURL(file);
+                        compressImage(file, 800, 800, 0.75)
+                          .then(setSlipImage)
+                          .catch((err) => {
+                            console.error(err);
+                            alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                          });
                       }
                     }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"

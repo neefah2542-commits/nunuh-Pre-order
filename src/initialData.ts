@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Order, OrderStatus, CatalogueItem } from './types';
+import { Order, OrderStatus, CatalogueItem, CustomerReview } from './types';
 
 export const INITIAL_CATALOGUE: CatalogueItem[] = [
   {
@@ -406,5 +406,53 @@ export const INITIAL_ORDERS: Order[] = [
       sleeves: "Bell Sleeves (แขนกระดิ่ง)"
     },
     branch: "สาขายะลา"
+  }
+];
+
+export const INITIAL_REVIEWS: CustomerReview[] = [
+  {
+    id: "rev-1",
+    orderId: "order-4",
+    orderNumber: "NU-26004",
+    customerName: "คุณแพรวา มิตรรัก",
+    dressType: "ชุดมงคลสไตล์คาฟทัน",
+    rating: 5,
+    ratingDress: 5,
+    ratingFabric: 5,
+    ratingService: 5,
+    comment: "งานเย็บประณีตละเอียดมากค่ะ ซับในหนาพอดีอย่างที่ตกลงกันไว้ ใส่ไปงานแต่งงานแล้วทุกคนชมว่าชุดหรูหรามาก ขอบคุณช่างและทีมงาน NUNUH ทุกคนนะคะ",
+    reviewImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=300",
+    tailorNote: "ดีไซน์คอวีปักเม็ดคริสตัลลูกค้าประทับใจมาก ช่างตัดแพทเทิร์นได้สัดส่วนคอและแขนที่บานระบายโปร่งได้สวยสง่าพอดี",
+    createdAt: "2026-07-03"
+  },
+  {
+    id: "rev-2",
+    orderId: "order-past-1",
+    orderNumber: "NU-25999",
+    customerName: "คุณนัสรินดา หะยี",
+    dressType: "อาบายะห์ Amira Luxury",
+    rating: 5,
+    ratingDress: 5,
+    ratingFabric: 5,
+    ratingService: 5,
+    comment: "งานปักสวยสง่าอลังการและประณีตมากค่ะ ผ้าพรีเมียมซิลค์ทิ้งตัวมีน้ำหนักดี ใส่สบายเดินสะดวกไม่รั้งสะโพกเลย คุ้มค่าราคารอคอยค่ะ",
+    reviewImage: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=300",
+    tailorNote: "การเพิ่มความยาวพิเศษเพื่อให้คลุมรองเท้าส้นสูงและรอบวงแขน 16 นิ้วเป็นสัดส่วนที่เหมาะกับลูกค้าคนนี้มาก",
+    createdAt: "2026-06-28"
+  },
+  {
+    id: "rev-3",
+    orderId: "order-past-2",
+    orderNumber: "NU-25998",
+    customerName: "คุณอานิสา ยะโก๊ะ",
+    dressType: "เดรสราตรีผ้าซาตินมรกต",
+    rating: 4,
+    ratingDress: 4,
+    ratingFabric: 5,
+    ratingService: 4,
+    comment: "ชุดสวยเงางามหรูหรามากค่ะ เข้ารูปเน้นช่วงเอวคอดดีมาก แต่อาจจะฟิตไปนิดตอนทานอาหาร ช่างที่ยะลาช่วยปรับแก้ขยายตะเข็บข้างให้ฟรีทันใจเลยค่ะ บริการประทับใจสุดๆ",
+    reviewImage: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=300",
+    tailorNote: "สำหรับสไตล์คอถ่วงผ้าซาตินและทรงหางปลาแบบนี้ ในอนาคตควรเพื่อตะเข็บซ่อนซับในให้ขยายได้ง่ายขึ้น 0.5 นิ้วเป็นมาตรฐาน",
+    createdAt: "2026-06-25"
   }
 ];

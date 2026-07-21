@@ -71,6 +71,30 @@ export interface Order {
   externalOrderId?: string;    // รหัสออเดอร์จากกัน / รหัสออเดอร์อ้างอิง
   lineUserId?: string;         // รหัส LINE User ID สำหรับติดต่อ
   slipImage?: string;          // ภาพสลิปโอนเงิน (Base64 string)
+  feedbacks?: FeedbackMessage[]; // ข้อความตอบกลับ/แจ้งเตือนจากลูกค้าหรือร้านค้า
+}
+
+export interface FeedbackMessage {
+  id: string;
+  sender: 'customer' | 'tailor'; // ผู้ส่ง: ลูกค้า หรือ ช่าง/ร้านค้า
+  content: string;               // ข้อความ
+  timestamp: string;             // วันเวลาที่ส่ง
+}
+
+export interface CustomerReview {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  dressType: string;
+  rating: number;                // คะแนนดาวเฉลี่ย
+  ratingDress?: number;          // คะแนนดาว - ทรงชุด (1-5)
+  ratingFabric?: number;         // คะแนนดาว - คุณภาพผ้า (1-5)
+  ratingService?: number;        // คะแนนดาว - บริการ (1-5)
+  comment: string;               // ความคิดเห็นลูกค้า
+  reviewImage?: string;          // รูปภาพรีวิว (Base64 string หรือ URL)
+  tailorNote?: string;           // โน้ต/ความคิดเห็นสำหรับช่างเย็บในการปรับปรุงคูตูร์
+  createdAt: string;             // วันที่สร้างรีวิว (YYYY-MM-DD)
 }
 
 export interface CatalogueItem {

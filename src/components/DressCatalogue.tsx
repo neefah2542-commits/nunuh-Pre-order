@@ -6,6 +6,7 @@
 import React, { useState, useRef } from 'react';
 import { CatalogueItem } from '../types';
 import { Search, Plus, Upload, X, Image, Sparkles, PlusCircle, Trash2 } from 'lucide-react';
+import { compressImage } from '../utils/image';
 
 interface DressCatalogueProps {
   catalogue: CatalogueItem[];
@@ -30,6 +31,7 @@ export default function DressCatalogue({ catalogue, onSelectDesignForOrder, onAd
   const [featuresInput, setFeaturesInput] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [formSizes, setFormSizes] = useState<string[]>(['SS', 'S', 'M', 'L', 'XL']);
   const [sizePricesMap, setSizePricesMap] = useState<Record<string, string>>({
     SS: '3800',
@@ -65,16 +67,19 @@ export default function DressCatalogue({ catalogue, onSelectDesignForOrder, onAd
     return matchesSearch && matchesCategory;
   });
 
-  // แปลงไฟล์รูปภาพเป็น Base64
-  const handleFile = (file: File) => {
+  // แปลงไฟล์รูปภาพเป็น Base64 พร้อมบีบอัดภาพเพื่อประหยัดพื้นที่เก็บข้อมูล
+  const handleFile = async (file: File) => {
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setImagePreview(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+      setIsCompressing(true);
+      try {
+        const compressed = await compressImage(file, 800, 800, 0.75);
+        setImagePreview(compressed);
+      } catch (err: any) {
+        console.error(err);
+        alert(err.message || 'เกิดข้อผิดพลาดในการประมวลผลรูปภาพ กรุณาลองใหม่อีกครั้งค่ะ');
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -497,7 +502,12 @@ export default function DressCatalogue({ catalogue, onSelectDesignForOrder, onAd
                           : 'border-natural-wheat bg-white hover:bg-natural-sand/10'
                       }`}
                     >
-                      {imagePreview ? (
+                       {isCompressing ? (
+                        <div className="space-y-3 py-6 flex flex-col items-center justify-center">
+                          <div className="h-8 w-8 border-4 border-natural-clay/30 border-t-natural-clay rounded-full animate-spin"></div>
+                          <p className="text-xs font-semibold text-natural-clay">กำลังประมวลผลและบีบอัดรูปภาพ...</p>
+                        </div>
+                      ) : imagePreview ? (
                         <div className="relative group w-full h-44 flex items-center justify-center">
                           <img 
                             src={imagePreview} 
@@ -535,20 +545,6 @@ export default function DressCatalogue({ catalogue, onSelectDesignForOrder, onAd
                     </div>
                   </div>
 
-                  <div className="mt-4">
-                    <label className="block text-xs font-bold text-natural-espresso/70 mb-1">หรือ วางลิงก์รูปภาพแบบชุดจากภายนอก</label>
-                    <input 
-                      type="url"
-                      placeholder="https://example.com/dress-image.jpg"
-                      value={imagePreview && imagePreview.startsWith('http') ? imagePreview : ''}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setImagePreview(e.target.value);
-                        }
-                      }}
-                      className="w-full px-3.5 py-2 rounded-xl border border-natural-wheat bg-white text-xs focus:outline-none focus:ring-1 focus:ring-natural-clay text-natural-espresso"
-                    />
-                  </div>
                 </div>
 
               </div>

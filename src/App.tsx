@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Order, OrderStatus, CatalogueItem } from './types';
-import { INITIAL_ORDERS, INITIAL_CATALOGUE } from './initialData';
+import { Order, OrderStatus, CatalogueItem, CustomerReview } from './types';
+import { INITIAL_ORDERS, INITIAL_CATALOGUE, INITIAL_REVIEWS } from './initialData';
 
 // Components
 import DashboardStats from './components/DashboardStats';
@@ -15,6 +15,7 @@ import OrderTracker from './components/OrderTracker';
 import DeliveryCalendar from './components/DeliveryCalendar';
 import DressCatalogue from './components/DressCatalogue';
 import CustomerPortal from './components/CustomerPortal';
+import ReviewDashboard from './components/ReviewDashboard';
 
 // Icons
 import { 
@@ -25,13 +26,15 @@ import {
   PlusCircle, 
   Heart,
   Store,
-  Layers
+  Layers,
+  Star
 } from 'lucide-react';
 
 export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('tracker'); // tracker, orderForm, calendar, catalogue
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('tracker'); // tracker, orderForm, calendar, catalogue, reviews
   const [isCustomerMode, setIsCustomerMode] = useState<boolean>(false);
   const [theme, setTheme] = useState<string>(() => {
     return localStorage.getItem('nunuh_selected_theme') || 'pink';
@@ -132,6 +135,27 @@ export default function App() {
     } else {
       setCatalogue(INITIAL_CATALOGUE);
       localStorage.setItem('nunuh_catalogue', JSON.stringify(INITIAL_CATALOGUE));
+    }
+
+    const savedReviews = localStorage.getItem('nunuh_reviews');
+    if (savedReviews) {
+      try {
+        const parsed = JSON.parse(savedReviews) as CustomerReview[];
+        const missingReviews = INITIAL_REVIEWS.filter(item => !parsed.some(p => p.id === item.id));
+        if (missingReviews.length > 0) {
+          const merged = [...parsed, ...missingReviews];
+          setReviews(merged);
+          localStorage.setItem('nunuh_reviews', JSON.stringify(merged));
+        } else {
+          setReviews(parsed);
+        }
+      } catch (e) {
+        setReviews(INITIAL_REVIEWS);
+        localStorage.setItem('nunuh_reviews', JSON.stringify(INITIAL_REVIEWS));
+      }
+    } else {
+      setReviews(INITIAL_REVIEWS);
+      localStorage.setItem('nunuh_reviews', JSON.stringify(INITIAL_REVIEWS));
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -305,6 +329,25 @@ export default function App() {
     localStorage.setItem('nunuh_catalogue', JSON.stringify(updated));
   };
 
+  // จัดการรีวิวและความพึงพอใจของลูกค้า (Customer Reviews & Feedback Handlers)
+  const handleAddReview = (newReview: CustomerReview) => {
+    const updated = [newReview, ...reviews];
+    setReviews(updated);
+    localStorage.setItem('nunuh_reviews', JSON.stringify(updated));
+  };
+
+  const handleUpdateReview = (updatedReview: CustomerReview) => {
+    const updated = reviews.map(r => r.id === updatedReview.id ? updatedReview : r);
+    setReviews(updated);
+    localStorage.setItem('nunuh_reviews', JSON.stringify(updated));
+  };
+
+  const handleDeleteReview = (id: string) => {
+    const updated = reviews.filter(r => r.id !== id);
+    setReviews(updated);
+    localStorage.setItem('nunuh_reviews', JSON.stringify(updated));
+  };
+
   // คำนวณรหัสออเดอร์ถัดไปแบบอัตโนมัติ (เช่น NU-26007)
   const getNextOrderNumber = () => {
     if (orders.length === 0) return "NU-26001";
@@ -391,6 +434,18 @@ export default function App() {
                 >
                   <Scissors className="h-4 w-4" />
                   <span className="hidden sm:inline">แบบชุดเสนอแนะนำ</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('reviews')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer ${
+                    activeTab === 'reviews'
+                      ? 'bg-natural-clay text-white shadow-xs'
+                      : 'text-natural-espresso/70 hover:bg-natural-sand/80 hover:text-natural-espresso'
+                  }`}
+                >
+                  <Star className={`h-4 w-4 ${activeTab === 'reviews' ? 'text-amber-300 fill-amber-300' : 'text-amber-500 fill-amber-500'}`} />
+                  <span className="hidden sm:inline">รีวิว & Feedback</span>
                 </button>
 
                 <button
@@ -521,6 +576,7 @@ export default function App() {
                     catalogue={catalogue} 
                     onAddOrder={handleAddOrder}
                     nextOrderNumber={getNextOrderNumber()}
+                    orders={orders}
                   />
                 </div>
               )}
@@ -549,6 +605,22 @@ export default function App() {
                     onSelectDesignForOrder={handleSelectDesignForOrder}
                     onAddCatalogueItem={handleAddCatalogueItem}
                     onDeleteCatalogueItem={handleDeleteCatalogueItem}
+                  />
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <div className="space-y-4">
+                  <div className="border-b border-natural-wheat pb-3">
+                    <h2 className="text-xl font-serif font-bold text-natural-espresso">ศูนย์รวมความพึงพอใจและรีวิวจากลูกค้า (⭐ รีวิว & Feedback)</h2>
+                    <p className="text-xs text-natural-espresso/60">บันทึกสถิติความประทับใจของลูกค้าในด้านคูตูร์แฮนด์เมด และส่งต่อคำวิจารณ์/บันทึกการปรับปรุงแพทเทิร์นตรงไปยังทีมช่างฝีมือ</p>
+                  </div>
+                  <ReviewDashboard 
+                    reviews={reviews}
+                    orders={orders}
+                    onAddReview={handleAddReview}
+                    onUpdateReview={handleUpdateReview}
+                    onDeleteReview={handleDeleteReview}
                   />
                 </div>
               )}

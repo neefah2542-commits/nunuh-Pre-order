@@ -30,6 +30,7 @@ import {
   Trash2
 } from 'lucide-react';
 import PrintOrderModal from './PrintOrderModal';
+import FeedbackSection from './FeedbackSection';
 
 interface CustomerPortalProps {
   orders: Order[];
@@ -167,6 +168,77 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
     }
 
     setIsEditingProfile(false);
+  };
+
+  const handleAddFeedback = (orderId: string, content: string, sender: 'customer' | 'tailor') => {
+    if (!onUpdateOrders) return;
+    
+    const updated = orders.map(o => {
+      if (o.id === orderId) {
+        const newMsg = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          sender,
+          content,
+          timestamp: new Date().toISOString()
+        };
+        return {
+          ...o,
+          feedbacks: [...(o.feedbacks || []), newMsg]
+        };
+      }
+      return o;
+    });
+    
+    onUpdateOrders(updated);
+    
+    // Also update searchedOrders state so the change displays immediately
+    if (searchedOrders) {
+      const updatedSearched = searchedOrders.map(o => {
+        if (o.id === orderId) {
+          const newMsg = {
+            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            sender,
+            content,
+            timestamp: new Date().toISOString()
+          };
+          return {
+            ...o,
+            feedbacks: [...(o.feedbacks || []), newMsg]
+          };
+        }
+        return o;
+      });
+      setSearchedOrders(updatedSearched);
+    }
+  };
+
+  const handleDeleteFeedback = (orderId: string, messageId: string) => {
+    if (!onUpdateOrders) return;
+    
+    const updated = orders.map(o => {
+      if (o.id === orderId) {
+        return {
+          ...o,
+          feedbacks: (o.feedbacks || []).filter(msg => msg.id !== messageId)
+        };
+      }
+      return o;
+    });
+    
+    onUpdateOrders(updated);
+    
+    if (searchedOrders) {
+      const updatedSearched = searchedOrders.map(o => {
+        if (o.id === orderId) {
+          return {
+            ...o,
+            feedbacks: (o.feedbacks || []).filter(msg => msg.id !== messageId)
+          };
+        }
+        return o;
+      });
+      setSearchedOrders(updatedSearched);
+    }
   };
 
   // Auto-search if search param is provided in URL or stored in localStorage
