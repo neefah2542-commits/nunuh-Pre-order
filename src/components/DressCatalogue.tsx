@@ -42,11 +42,15 @@ export default function DressCatalogue({ catalogue, onSelectDesignForOrder, onAd
   });
 
   const handleToggleSize = (size: string) => {
+    const sizeOrder = ['SS', 'S', 'M', 'L', 'XL'];
+    let newSizes: string[];
     if (formSizes.includes(size)) {
-      setFormSizes(formSizes.filter(s => s !== size));
+      newSizes = formSizes.filter(s => s !== size);
     } else {
-      setFormSizes([...formSizes, size]);
+      newSizes = [...formSizes, size];
     }
+    newSizes.sort((a, b) => sizeOrder.indexOf(a) - sizeOrder.indexOf(b));
+    setFormSizes(newSizes);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -446,32 +450,6 @@ export default function DressCatalogue({ catalogue, onSelectDesignForOrder, onAd
                     <p className="text-[10px] text-natural-espresso/50 mt-1">คลิกเพื่อเปิด/ปิดไซส์ที่รองรับเพื่อให้เจ้าหน้าที่และลูกค้าเลือกออเดอร์ด่วนได้ง่ายขึ้น</p>
                   </div>
 
-                  {formSizes.length > 0 && (
-                    <div className="bg-natural-sand/25 border border-natural-wheat/70 rounded-xl p-3.5 space-y-2">
-                      <p className="text-[10px] font-bold text-natural-clay uppercase">ตั้งราคาเฉพาะของแต่ละไซส์ (บาท):</p>
-                      <div className="grid grid-cols-5 gap-2">
-                        {formSizes.map((size) => (
-                          <div key={size} className="space-y-1">
-                            <span className="text-[10px] font-bold text-natural-espresso/70 block text-center font-serif">ไซส์ {size}</span>
-                            <input
-                              type="number"
-                              required
-                              placeholder="ราคา"
-                              value={sizePricesMap[size] || ''}
-                              onChange={(e) => {
-                                setSizePricesMap({
-                                  ...sizePricesMap,
-                                  [size]: e.target.value
-                                });
-                              }}
-                              className="w-full px-2 py-1 text-center border border-natural-wheat rounded-lg bg-white text-[11px] text-natural-espresso focus:ring-1 focus:ring-natural-clay focus:outline-none font-bold"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   <div>
                     <label className="block text-xs font-bold text-natural-espresso/70 mb-1">จุดเด่นของดีไซน์ (ใส่คอมม่าคั่นสำหรับหลายข้อ)</label>
                     <input 
@@ -548,6 +526,35 @@ export default function DressCatalogue({ catalogue, onSelectDesignForOrder, onAd
                 </div>
 
               </div>
+
+              {formSizes.length > 0 && (
+                <div className="bg-natural-sand/25 border border-natural-wheat/70 rounded-2xl p-5 space-y-3.5">
+                  <p className="text-xs font-extrabold text-natural-clay uppercase tracking-wider">ตั้งราคาเฉพาะของแต่ละไซส์ (บาท):</p>
+                  <div className="grid grid-cols-5 gap-3">
+                    {formSizes.map((size) => (
+                      <div key={size} className="space-y-1.5">
+                        <span className="text-xs font-extrabold text-natural-espresso/80 block text-center font-serif">ไซส์ {size}</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          required
+                          placeholder="ราคา"
+                          value={sizePricesMap[size] || ''}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9]/g, '');
+                            setSizePricesMap({
+                              ...sizePricesMap,
+                              [size]: val
+                            });
+                          }}
+                          className="w-full px-3 py-3 text-center border border-natural-wheat/80 rounded-xl bg-white text-sm text-natural-espresso focus:ring-1 focus:ring-natural-clay focus:outline-none font-black shadow-3xs tracking-wide"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-natural-espresso/70 mb-1">รายละเอียดและคำอธิบายสไตล์การแต่งตัว *</label>

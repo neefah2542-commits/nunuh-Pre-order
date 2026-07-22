@@ -16,6 +16,7 @@ import DeliveryCalendar from './components/DeliveryCalendar';
 import DressCatalogue from './components/DressCatalogue';
 import CustomerPortal from './components/CustomerPortal';
 import ReviewDashboard from './components/ReviewDashboard';
+import CustomerDashboard from './components/CustomerDashboard';
 
 // Icons
 import { 
@@ -27,7 +28,8 @@ import {
   Heart,
   Store,
   Layers,
-  Star
+  Star,
+  Users
 } from 'lucide-react';
 
 export default function App() {
@@ -105,8 +107,10 @@ export default function App() {
     const savedOrders = localStorage.getItem('nunuh_orders');
     if (savedOrders) {
       try {
-        const parsed = JSON.parse(savedOrders);
+        let parsed = JSON.parse(savedOrders);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // กรองข้อมูลที่เป็นออเดอร์ตัวอย่างออกเพื่อให้พร้อมใช้งานจริง
+          parsed = parsed.filter(o => !['order-1', 'order-2', 'order-3', 'order-4', 'order-5', 'order-6'].includes(o.id));
           initialOrders = mergeOrders(INITIAL_ORDERS, parsed);
         }
       } catch (e) {
@@ -140,7 +144,9 @@ export default function App() {
     const savedReviews = localStorage.getItem('nunuh_reviews');
     if (savedReviews) {
       try {
-        const parsed = JSON.parse(savedReviews) as CustomerReview[];
+        let parsed = JSON.parse(savedReviews) as CustomerReview[];
+        // กรองรีวิวตัวอย่างออกเพื่อให้พร้อมใช้งานจริง
+        parsed = parsed.filter(r => !['rev-1', 'rev-2', 'rev-3'].includes(r.id) && !['order-1', 'order-2', 'order-3', 'order-4', 'order-5', 'order-6', 'order-past-1', 'order-past-2'].includes(r.orderId));
         const missingReviews = INITIAL_REVIEWS.filter(item => !parsed.some(p => p.id === item.id));
         if (missingReviews.length > 0) {
           const merged = [...parsed, ...missingReviews];
@@ -148,6 +154,7 @@ export default function App() {
           localStorage.setItem('nunuh_reviews', JSON.stringify(merged));
         } else {
           setReviews(parsed);
+          localStorage.setItem('nunuh_reviews', JSON.stringify(parsed));
         }
       } catch (e) {
         setReviews(INITIAL_REVIEWS);
@@ -437,15 +444,15 @@ export default function App() {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('reviews')}
+                  onClick={() => setActiveTab('customerDashboard')}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer ${
-                    activeTab === 'reviews'
+                    activeTab === 'customerDashboard'
                       ? 'bg-natural-clay text-white shadow-xs'
                       : 'text-natural-espresso/70 hover:bg-natural-sand/80 hover:text-natural-espresso'
                   }`}
                 >
-                  <Star className={`h-4 w-4 ${activeTab === 'reviews' ? 'text-amber-300 fill-amber-300' : 'text-amber-500 fill-amber-500'}`} />
-                  <span className="hidden sm:inline">รีวิว & Feedback</span>
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">แดชบอร์ดลูกค้า & รีวิว (IDD IDH)</span>
                 </button>
 
                 <button
@@ -609,15 +616,16 @@ export default function App() {
                 </div>
               )}
 
-              {activeTab === 'reviews' && (
+              {activeTab === 'customerDashboard' && (
                 <div className="space-y-4">
                   <div className="border-b border-natural-wheat pb-3">
-                    <h2 className="text-xl font-serif font-bold text-natural-espresso">ศูนย์รวมความพึงพอใจและรีวิวจากลูกค้า (⭐ รีวิว & Feedback)</h2>
-                    <p className="text-xs text-natural-espresso/60">บันทึกสถิติความประทับใจของลูกค้าในด้านคูตูร์แฮนด์เมด และส่งต่อคำวิจารณ์/บันทึกการปรับปรุงแพทเทิร์นตรงไปยังทีมช่างฝีมือ</p>
+                    <h2 className="text-xl font-serif font-bold text-natural-espresso">ระบบศูนย์ข้อมูลลูกค้าและรีวิวความพึงพอใจ (Customer CRM & Satisfaction Feedback)</h2>
+                    <p className="text-xs text-natural-espresso/60">วิเคราะห์ข้อมูลประวัติการสั่งตัด จำแนกกลุ่มลูกค้าประเภท IDD, IDH และระดับบัตรสมาชิก พร้อมเจาะลึกรายละเอียดสัดส่วนตัวและติดตามรีวิวคำติชมสะสมในที่เดียว</p>
                   </div>
-                  <ReviewDashboard 
-                    reviews={reviews}
+                  <CustomerDashboard 
                     orders={orders}
+                    reviews={reviews}
+                    onSelectTab={setActiveTab}
                     onAddReview={handleAddReview}
                     onUpdateReview={handleUpdateReview}
                     onDeleteReview={handleDeleteReview}
