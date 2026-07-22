@@ -49,17 +49,25 @@ export default function App() {
 
   // ฟังก์ชันผสานข้อมูลออเดอร์โดยไม่ให้ข้อมูลทับกันหรือสูญหาย (Smart Order Merge)
   const mergeOrders = (current: Order[], incoming: Order[]): Order[] => {
+    const deletedIdsStr = localStorage.getItem('nunuh_deleted_order_ids') || '[]';
+    let deletedIds: string[] = [];
+    try {
+      deletedIds = JSON.parse(deletedIdsStr);
+    } catch (e) {}
+    const deletedSet = new Set(deletedIds);
+
     const map = new Map<string, Order>();
     for (const o of current) {
-      map.set(o.id, o);
+      if (!deletedSet.has(o.id)) {
+        map.set(o.id, o);
+      }
     }
     for (const o of incoming) {
+      if (deletedSet.has(o.id)) continue;
       if (!map.has(o.id)) {
         map.set(o.id, o);
       } else {
-        // หากมีอยู่แล้ว เลือกข้อมูลที่อัปเดตล่าสุดหรือเก็บไว้ทั้งคู่
         const existing = map.get(o.id)!;
-        // หากสถานะหรือข้อมูลใหม่กว่า ให้แทนที่ หรือคงเวอร์ชันที่สมบูรณ์ที่สุด
         map.set(o.id, { ...existing, ...o });
       }
     }
@@ -247,7 +255,7 @@ export default function App() {
   }, []);
 
   // บันทึกข้อมูลลง LocalStorage พร้อมผสานข้อมูลป้องกันการชนกัน (Concurrent Save Safety)
-  const saveOrdersToStorage = (updatedOrders: Order[]) => {
+  const saveOrdersToStorage = (updatedOrders: Order[], deletedId?: string) => {
     try {
       const stored = localStorage.getItem('nunuh_orders');
       let currentStored: Order[] = [];
@@ -255,7 +263,10 @@ export default function App() {
         currentStored = JSON.parse(stored);
       }
       // ผสานระหว่างข้อมูลที่มีอยู่ล่าสุดในเครื่อง กับข้อมูลที่กำลังบันทึกใหม่
-      const fullyMerged = mergeOrders(currentStored, updatedOrders);
+      let fullyMerged = mergeOrders(currentStored, updatedOrders);
+      if (deletedId) {
+        fullyMerged = fullyMerged.filter(o => o.id !== deletedId);
+      }
       
       setOrders(fullyMerged);
       localStorage.setItem('nunuh_orders', JSON.stringify(fullyMerged));
@@ -270,9 +281,13 @@ export default function App() {
         channel.close();
       } catch (e) {}
     } catch (e) {
-      setOrders(updatedOrders);
-      localStorage.setItem('nunuh_orders', JSON.stringify(updatedOrders));
-      syncWithServer(updatedOrders);
+      let finalOrders = updatedOrders;
+      if (deletedId) {
+        finalOrders = finalOrders.filter(o => o.id !== deletedId);
+      }
+      setOrders(finalOrders);
+      localStorage.setItem('nunuh_orders', JSON.stringify(finalOrders));
+      syncWithServer(finalOrders);
     }
   };
 
@@ -296,9 +311,30 @@ export default function App() {
   };
 
   // ลบออเดอร์
-  const handleDeleteOrder = (orderId: string) => {
+  const handleDeleteOrder = async (orderId: string) => {
+    // 1. เพิ่ม ID ไปยังรายการที่ถูกลบในเครื่อง เพื่อป้องกันการคืนชีพเมื่อผสาน
+    const deletedIdsStr = localStorage.getItem('nunuh_deleted_order_ids') || '[]';
+    let deletedIds: string[] = [];
+    try {
+      deletedIds = JSON.parse(deletedIdsStr);
+    } catch (e) {}
+    if (!deletedIds.includes(orderId)) {
+      deletedIds.push(orderId);
+      localStorage.setItem('nunuh_deleted_order_ids', JSON.stringify(deletedIds));
+    }
+
+    // 2. ลบออกจากระบบเซิร์ฟเวอร์โดยตรงทันที
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn("Server delete failed, will sync later:", err);
+    }
+
+    // 3. ปรับปรุงสถานะ Local และเซฟแบบคลีน
     const updated = orders.filter(o => o.id !== orderId);
-    saveOrdersToStorage(updated);
+    saveOrdersToStorage(updated, orderId);
   };
 
   // แก้ไขรายละเอียดออเดอร์ทั้งหมด

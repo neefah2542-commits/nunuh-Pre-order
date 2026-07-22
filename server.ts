@@ -19,6 +19,7 @@ app.use(express.json({
 }));
 
 const ORDERS_FILE = path.join(process.cwd(), 'orders.json');
+const DELETED_ORDERS_FILE = path.join(process.cwd(), 'deleted_orders.json');
 let lastKnownPublicUrl = "";
 
 // Helper to read orders from file safely
@@ -43,10 +44,50 @@ function writeOrdersOnServer(orders: any[]) {
   }
 }
 
+// Helper to read deleted order IDs
+function readDeletedOrdersOnServer(): string[] {
+  try {
+    if (fs.existsSync(DELETED_ORDERS_FILE)) {
+      const data = fs.readFileSync(DELETED_ORDERS_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error("Error reading deleted orders:", err);
+  }
+  return [];
+}
+
+// Helper to write deleted order IDs
+function writeDeletedOrdersOnServer(ids: string[]) {
+  try {
+    fs.writeFileSync(DELETED_ORDERS_FILE, JSON.stringify(ids, null, 2), 'utf8');
+  } catch (err) {
+    console.error("Error writing deleted orders:", err);
+  }
+}
+
 // REST API Endpoints
 app.get("/api/orders", (req, res) => {
   const serverOrders = readOrdersOnServer();
   res.json(serverOrders);
+});
+
+app.delete("/api/orders/:id", (req, res) => {
+  const { id } = req.params;
+  
+  // 1. Add to deleted list to prevent resurrection
+  const deletedIds = readDeletedOrdersOnServer();
+  if (!deletedIds.includes(id)) {
+    deletedIds.push(id);
+    writeDeletedOrdersOnServer(deletedIds);
+  }
+  
+  // 2. Filter from existing active orders
+  const current = readOrdersOnServer();
+  const updated = current.filter((o: any) => o.id !== id);
+  writeOrdersOnServer(updated);
+  
+  res.json({ success: true, orders: updated });
 });
 
 app.post("/api/orders", (req: any, res) => {
@@ -56,17 +97,23 @@ app.post("/api/orders", (req: any, res) => {
     lastKnownPublicUrl = publicUrl;
   }
 
+  const deletedIds = readDeletedOrdersOnServer();
+  const deletedSet = new Set(deletedIds);
+
   if (Array.isArray(incomingOrders)) {
     const current = readOrdersOnServer();
     const map = new Map<string, any>();
     
-    // First index existing server-side orders
+    // First index existing server-side orders, skipping deleted ones
     for (const o of current) {
-      map.set(o.id, o);
+      if (!deletedSet.has(o.id)) {
+        map.set(o.id, o);
+      }
     }
     
-    // Merge or insert incoming orders
+    // Merge or insert incoming orders, skipping deleted ones
     for (const o of incomingOrders) {
+      if (deletedSet.has(o.id)) continue;
       if (!map.has(o.id)) {
         map.set(o.id, o);
       } else {
@@ -87,9 +134,12 @@ app.post("/api/orders", (req: any, res) => {
     const current = readOrdersOnServer();
     const map = new Map<string, any>();
     for (const o of current) {
-      map.set(o.id, o);
+      if (!deletedSet.has(o.id)) {
+        map.set(o.id, o);
+      }
     }
     for (const o of req.body) {
+      if (deletedSet.has(o.id)) continue;
       if (!map.has(o.id)) {
         map.set(o.id, o);
       } else {
