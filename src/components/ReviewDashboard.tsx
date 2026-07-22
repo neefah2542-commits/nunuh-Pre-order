@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { CustomerReview, Order, OrderStatus } from '../types';
 import { 
   Star, Search, Filter, Plus, Upload, X, Check, Trash2, 
-  Scissors, MessageSquare, Clipboard, Award, TrendingUp, Sparkles, MessageCircle
+  Scissors, MessageSquare, Clipboard, Award, TrendingUp, Sparkles, MessageCircle,
+  Share2
 } from 'lucide-react';
 import { compressImage } from '../utils/image';
 import { motion, AnimatePresence } from 'motion/react';
@@ -41,6 +42,11 @@ export default function ReviewDashboard({
 
   // Get completed orders that can be reviewed
   const completedOrders = orders.filter(o => o.status === OrderStatus.COMPLETED);
+
+  // Find completed orders without a review
+  const unreviewedCompletedOrders = completedOrders.filter(
+    order => !reviews.some(rev => rev.orderId === order.id || rev.orderNumber === order.orderNumber)
+  );
 
   // Filtered reviews
   const filteredReviews = reviews.filter(rev => {
@@ -216,6 +222,105 @@ export default function ReviewDashboard({
           </button>
         </div>
 
+      </div>
+
+      {/* CUSTOMER REVIEW LINK GENERATOR & DIRECT SHARE */}
+      <div className="bg-white rounded-2xl border border-natural-wheat/80 p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-natural-espresso text-natural-cream rounded-xl shrink-0">
+              <Share2 className="h-5 w-5 text-natural-ochre" />
+            </div>
+            <div>
+              <h4 className="font-serif font-bold text-sm text-natural-espresso">🔗 แชร์ลิงก์ส่งให้ลูกค้าเขียนรีวิวความพึงพอใจ</h4>
+              <p className="text-[11px] text-natural-espresso/60 mt-0.5">คัดลอกลิงก์ด้านล่างเพื่อส่งให้ลูกค้าทาง LINE, Messenger หรือช่องทางต่างๆ เพื่อให้ลูกค้ากดเข้ามาเขียนรีวิวและประเมินผลงานได้โดยตรง</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 shrink-0">
+            <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full font-bold uppercase tracking-wide">
+              Online Active ✓
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center border-t border-natural-wheat/40 pt-3">
+          {/* General Customer Lounge link */}
+          <div className="lg:col-span-6 space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-natural-espresso/60 uppercase tracking-wider">
+              1. ลิงก์ทั่วไป (หน้าหลักบริการตนเอง - Customer Lounge)
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                readOnly
+                value={`${window.location.origin}/?mode=customer`}
+                className="flex-1 bg-stone-50 border border-natural-wheat rounded-xl px-3 py-2 text-xs text-natural-espresso/80 font-mono font-medium focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/?mode=customer`);
+                  alert('คัดลอกลิงก์หน้าหลักบริการลูกค้าเรียบร้อยค่ะ! 📋');
+                }}
+                className="bg-natural-espresso hover:bg-natural-clay text-natural-cream hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shrink-0"
+              >
+                <Clipboard className="h-3.5 w-3.5" />
+                <span>คัดลอกลิงก์</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick link guide */}
+          <div className="lg:col-span-6 bg-amber-50/40 p-3 rounded-xl border border-amber-200/40 text-[11px] text-natural-espresso/80 leading-relaxed space-y-1">
+            <span className="font-bold text-amber-800 flex items-center gap-1">
+              <span>💡 คำแนะนำเพื่อความสะดวกรวดเร็ว:</span>
+            </span>
+            <p>ทางร้านสามารถกดปุ่ม <span className="font-bold text-natural-clay">"คัดลอกลิงก์รีวิวตรง"</span> จากรายชื่อออเดอร์สำเร็จด้านล่างนี้ได้ทันที ระบบจะสร้างลิงก์พิเศษที่<b>ค้นหาข้อมูลและรหัสชุดของลูกค้าให้อัตโนมัติ</b> ลูกค้าสามารถเปิดลิงก์เข้ามาแล้วกดปุ่มเขียนรีวิวได้ทันทีโดยไม่ต้องกรอกเบอร์โทรค้นหาเองค่ะ!</p>
+          </div>
+        </div>
+
+        {/* Unreviewed completed orders direct link buttons */}
+        {unreviewedCompletedOrders.length > 0 ? (
+          <div className="border-t border-natural-wheat/40 pt-3.5 space-y-2">
+            <span className="block text-[10px] font-extrabold text-natural-espresso/60 uppercase tracking-wider">
+              📋 รายชื่อออเดอร์จัดส่งแล้วที่ยังไม่ได้เขียนรีวิว ({unreviewedCompletedOrders.length} ออเดอร์)
+            </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-44 overflow-y-auto pr-1 scrollbar-thin">
+              {unreviewedCompletedOrders.map((order) => {
+                const directLink = `${window.location.origin}/?mode=customer&search=${order.orderNumber}`;
+                return (
+                  <div key={order.id} className="bg-stone-50/50 border border-natural-wheat/60 p-2.5 rounded-xl flex items-center justify-between text-xs hover:border-natural-clay/50 transition-all">
+                    <div className="space-y-0.5 min-w-0 mr-2">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="font-mono font-black text-natural-espresso">{order.orderNumber}</span>
+                        <span className="text-[10px] font-bold text-natural-espresso/70 truncate">{order.customerName}</span>
+                      </div>
+                      <p className="text-[10px] text-natural-espresso/50 truncate font-serif">{order.dressType} — {order.fabricColor}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(directLink);
+                        alert(`คัดลอกลิงก์รีวิวตรงสำหรับ คุณ ${order.customerName.replace('คุณ', '').trim()} (${order.orderNumber}) เรียบร้อยค่ะ! 📋`);
+                      }}
+                      className="bg-natural-clay/10 hover:bg-natural-clay text-natural-clay hover:text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center space-x-1 cursor-pointer shrink-0"
+                      title="คัดลอกลิงก์รีวิวอัตโนมัติสำหรับส่งให้ลูกค้ารายนี้"
+                    >
+                      <Clipboard className="h-3 w-3" />
+                      <span>คัดลอกลิงก์</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="border-t border-natural-wheat/40 pt-3 text-center py-2 bg-emerald-50/20 border border-emerald-100 rounded-xl">
+            <p className="text-[11px] font-bold text-emerald-800 flex items-center justify-center gap-1">
+              <span>🎉 ดีเยี่ยม! ออเดอร์ที่ส่งมอบเสร็จสิ้นทั้งหมดได้รับการรีวิวเรียบร้อยครบถ้วนแล้วค่ะ</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 2. SEARCH & FILTER TOOLBAR */}

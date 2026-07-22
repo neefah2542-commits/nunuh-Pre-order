@@ -634,6 +634,8 @@ export default function App() {
                   <CustomerPortal 
                     orders={orders}
                     catalogue={catalogue}
+                    reviews={reviews}
+                    onAddReview={handleAddReview}
                     onAddOrder={handleAddOrder}
                     onUpdateOrders={saveOrdersToStorage}
                     nextOrderNumber={getNextOrderNumber()}

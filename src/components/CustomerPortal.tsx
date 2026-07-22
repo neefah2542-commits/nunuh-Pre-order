@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Order, OrderStatus, CatalogueItem, STATUS_MAP, Measurements, STANDARD_SIZE_CHART } from '../types';
+import { Order, OrderStatus, CatalogueItem, STATUS_MAP, Measurements, STANDARD_SIZE_CHART, CustomerReview } from '../types';
 import { 
   Search, 
   Sparkles, 
@@ -27,21 +27,34 @@ import {
   CreditCard,
   History,
   Camera,
-  Trash2
+  Trash2,
+  Star
 } from 'lucide-react';
 import PrintOrderModal from './PrintOrderModal';
 import FeedbackSection from './FeedbackSection';
+import { compressImage } from '../utils/image';
 
 interface CustomerPortalProps {
   orders: Order[];
   catalogue: CatalogueItem[];
+  reviews?: CustomerReview[];
+  onAddReview?: (newReview: CustomerReview) => void;
   onAddOrder: (newOrder: Order) => void;
   onUpdateOrders?: (updatedOrders: Order[]) => void;
   nextOrderNumber: string;
   isCustomerLocked?: boolean;
 }
 
-export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdateOrders, nextOrderNumber, isCustomerLocked = false }: CustomerPortalProps) {
+export default function CustomerPortal({ 
+  orders, 
+  catalogue, 
+  reviews = [], 
+  onAddReview, 
+  onAddOrder, 
+  onUpdateOrders, 
+  nextOrderNumber, 
+  isCustomerLocked = false 
+}: CustomerPortalProps) {
   // States for Order Tracking
   const [searchQuery, setSearchQuery] = useState('');
   const [searchedOrders, setSearchedOrders] = useState<Order[] | null>(null);
@@ -59,6 +72,15 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
   const [editName, setEditName] = useState<string>('');
   const [editPhone, setEditPhone] = useState<string>('');
   const [editSocial, setEditSocial] = useState<string>('');
+
+  // Customer Review states for past orders
+  const [activeReviewOrderId, setActiveReviewOrderId] = useState<string | null>(null);
+  const [reviewRatingDress, setReviewRatingDress] = useState<number>(5);
+  const [reviewRatingFabric, setReviewRatingFabric] = useState<number>(5);
+  const [reviewRatingService, setReviewRatingService] = useState<number>(5);
+  const [reviewComment, setReviewComment] = useState<string>('');
+  const [reviewImage, setReviewImage] = useState<string | null>(null);
+  const [isCompressingImage, setIsCompressingImage] = useState<boolean>(false);
 
   // Sync avatar when searchedOrders changes
   useEffect(() => {
@@ -311,6 +333,73 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
 
     setSearchedOrders(matched);
     setHasSearched(true);
+  };
+
+  // Handle Customer Review Image Upload
+  const handleReviewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsCompressingImage(true);
+    try {
+      const compressed = await compressImage(file);
+      setReviewImage(compressed);
+    } catch (err) {
+      console.error('Failed to compress image:', err);
+    } finally {
+      setIsCompressingImage(false);
+    }
+  };
+
+  // Submit Review from Customer Portal
+  const submitCustomerReview = (order: Order) => {
+    if (!onAddReview) {
+      console.warn('onAddReview handler is missing in props');
+    }
+
+    const calculatedRating = Math.round((reviewRatingDress + reviewRatingFabric + reviewRatingService) / 3);
+
+    const newReview: CustomerReview = {
+      id: `rev-${Date.now()}`,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      dressType: order.dressType,
+      rating: calculatedRating,
+      ratingDress: reviewRatingDress,
+      ratingFabric: reviewRatingFabric,
+      ratingService: reviewRatingService,
+      comment: reviewComment || 'ลูกค้าไม่ได้กรอกความคิดเห็นเพิ่มเติม',
+      tailorNote: '',
+      reviewImage: reviewImage || undefined,
+      createdAt: new Date().toISOString()
+    };
+
+    if (onAddReview) {
+      onAddReview(newReview);
+    } else {
+      // Direct LocalStorage fallback if prop is missing
+      const savedReviews = localStorage.getItem('nunuh_reviews');
+      let parsedReviews: CustomerReview[] = [];
+      if (savedReviews) {
+        try {
+          parsedReviews = JSON.parse(savedReviews);
+        } catch (e) {}
+      }
+      const updatedReviews = [newReview, ...parsedReviews];
+      localStorage.setItem('nunuh_reviews', JSON.stringify(updatedReviews));
+    }
+
+    // Show beautiful success
+    alert('ขอบคุณสำหรับรีวิวความพึงพอใจและคำติชมของคุณมากๆ ค่ะ! ความคิดเห็นของคุณจะส่งตรงไปยังทีมงานดีไซเนอร์และช่างฝีมือของ NUNUH ทันทีค่ะ 💖');
+
+    // Reset state
+    setActiveReviewOrderId(null);
+    setReviewRatingDress(5);
+    setReviewRatingFabric(5);
+    setReviewRatingService(5);
+    setReviewComment('');
+    setReviewImage(null);
   };
 
   // Get Progress Percentage based on Status
@@ -1157,8 +1246,246 @@ export default function CustomerPortal({ orders, catalogue, onAddOrder, onUpdate
                             </div>
                           </div>
 
+                          {/* Customer Review Section */}
+                          {(() => {
+                            const existingReview = reviews?.find(r => r.orderId === order.id || r.orderNumber === order.orderNumber);
+                            return (
+                              <div className="space-y-3.5 pt-2 border-t border-natural-sand/50">
+                                {/* Existing Review Display */}
+                                {existingReview && (
+                                  <div className="bg-white/80 p-4 rounded-xl border border-emerald-200/50 space-y-3 shadow-3xs animate-fade-in">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                        <span>คุณได้ประเมินความพึงพอใจแล้ว เรียบร้อยค่ะ</span>
+                                      </span>
+                                      <span className="text-[10px] text-natural-espresso/45">
+                                        {new Date(existingReview.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </span>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-3 gap-2.5 bg-emerald-50/20 p-2 rounded-lg border border-emerald-100/40 text-[10px] font-bold text-natural-espresso/80 text-center">
+                                      <div>ทรงชุด: {existingReview.ratingDress || existingReview.rating} ⭐</div>
+                                      <div>คุณภาพผ้า: {existingReview.ratingFabric || existingReview.rating} ⭐</div>
+                                      <div>การบริการ: {existingReview.ratingService || existingReview.rating} ⭐</div>
+                                    </div>
+
+                                    <div className="text-xs text-natural-espresso/80 font-medium bg-stone-50 p-2.5 rounded-lg border border-stone-200/40 italic">
+                                      "{existingReview.comment}"
+                                    </div>
+
+                                    {existingReview.reviewImage && (
+                                      <div className="w-16 h-16 rounded-lg overflow-hidden border border-natural-sand/60">
+                                        <img 
+                                          src={existingReview.reviewImage} 
+                                          alt="Review attached" 
+                                          className="w-full h-full object-cover"
+                                          referrerPolicy="no-referrer"
+                                        />
+                                      </div>
+                                    )}
+
+                                    {existingReview.tailorNote && (
+                                      <div className="bg-amber-50/40 border border-amber-200/40 p-2.5 rounded-lg text-[10px] text-natural-espresso/85 leading-relaxed">
+                                        <span className="font-bold text-amber-800">📌 บันทึกคำแนะนำส่งตรงถึงช่างเย็บ:</span> {existingReview.tailorNote}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Write Review Button */}
+                                {!existingReview && activeReviewOrderId !== order.id && (
+                                  <div className="flex justify-center py-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveReviewOrderId(order.id);
+                                        setReviewRatingDress(5);
+                                        setReviewRatingFabric(5);
+                                        setReviewRatingService(5);
+                                        setReviewComment('');
+                                        setReviewImage(null);
+                                      }}
+                                      className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-natural-clay to-natural-clay-dark hover:from-natural-espresso hover:to-natural-espresso text-white rounded-xl text-xs font-black shadow-3xs transition-all flex items-center justify-center space-x-2 cursor-pointer animate-pulse hover:animate-none"
+                                    >
+                                      <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
+                                      <span>เขียนรีวิวความพึงพอใจสำหรับชุดนี้ ⭐</span>
+                                    </button>
+                                  </div>
+                                )}
+
+                                {/* Write Review Form */}
+                                {!existingReview && activeReviewOrderId === order.id && (
+                                  <div className="bg-white p-5 rounded-2xl border border-natural-wheat shadow-xs space-y-4 animate-fade-in">
+                                    <div className="flex justify-between items-center border-b border-natural-sand pb-2">
+                                      <h5 className="font-serif font-extrabold text-xs text-natural-espresso flex items-center gap-1.5">
+                                        <Star className="h-4 w-4 text-natural-ochre fill-natural-ochre" />
+                                        <span>แบบประเมินความพึงพอใจ — ออเดอร์ {order.orderNumber}</span>
+                                      </h5>
+                                      <button
+                                        type="button"
+                                        onClick={() => setActiveReviewOrderId(null)}
+                                        className="text-natural-espresso/40 hover:text-natural-espresso p-1 rounded-lg hover:bg-stone-100 cursor-pointer"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+
+                                    {/* Multi-criteria Star ratings */}
+                                    <div className="space-y-3 bg-stone-50/50 p-4 rounded-xl border border-stone-200/40">
+                                      {/* Criterion 1: Dress silhouette / Fit */}
+                                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                                        <span className="text-xs font-bold text-natural-espresso/85">1. ความพึงพอใจในทรงชุด สัดส่วนสวมใส่ และแพทเทิร์น</span>
+                                        <div className="flex items-center space-x-1 shrink-0">
+                                          {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                              key={star}
+                                              type="button"
+                                              onClick={() => setReviewRatingDress(star)}
+                                              className="p-0.5 focus:outline-none cursor-pointer"
+                                            >
+                                              <Star 
+                                                className={`h-5 w-5 transition-all ${
+                                                  star <= reviewRatingDress 
+                                                    ? 'text-amber-400 fill-amber-400 scale-110' 
+                                                    : 'text-stone-300 hover:text-amber-200'
+                                                }`}
+                                              />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* Criterion 2: Fabric Quality */}
+                                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-t border-stone-200/30 pt-2.5">
+                                        <span className="text-xs font-bold text-natural-espresso/85">2. คุณภาพของชนิดผ้า เนื้อผ้าสัมผัส และสีสันตรงใจ</span>
+                                        <div className="flex items-center space-x-1 shrink-0">
+                                          {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                              key={star}
+                                              type="button"
+                                              onClick={() => setReviewRatingFabric(star)}
+                                              className="p-0.5 focus:outline-none cursor-pointer"
+                                            >
+                                              <Star 
+                                                className={`h-5 w-5 transition-all ${
+                                                  star <= reviewRatingFabric 
+                                                    ? 'text-amber-400 fill-amber-400 scale-110' 
+                                                    : 'text-stone-300 hover:text-amber-200'
+                                                }`}
+                                              />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* Criterion 3: Staff Service */}
+                                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-t border-stone-200/30 pt-2.5">
+                                        <span className="text-xs font-bold text-natural-espresso/85">3. การบริการ คำแนะนำ และความใส่ใจดูแลของดีไซเนอร์</span>
+                                        <div className="flex items-center space-x-1 shrink-0">
+                                          {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                              key={star}
+                                              type="button"
+                                              onClick={() => setReviewRatingService(star)}
+                                              className="p-0.5 focus:outline-none cursor-pointer"
+                                            >
+                                              <Star 
+                                                className={`h-5 w-5 transition-all ${
+                                                  star <= reviewRatingService 
+                                                    ? 'text-amber-400 fill-amber-400 scale-110' 
+                                                    : 'text-stone-300 hover:text-amber-200'
+                                                }`}
+                                              />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Comment Field */}
+                                    <div className="space-y-1">
+                                      <label className="block text-[10px] font-extrabold text-natural-espresso/60 uppercase tracking-wider">
+                                        ความรู้สึกลูกค้า หรือคำติชมเมื่อลองสวมใส่จริง
+                                      </label>
+                                      <textarea
+                                        rows={3}
+                                        placeholder="เขียนระบุรายละเอียดความรู้สึกประทับใจ หรือข้อเสนอแนะเพิ่มเติมเพื่อให้ช่างเย็บปรับปรุงในอนาคต..."
+                                        value={reviewComment}
+                                        onChange={(e) => setReviewComment(e.target.value)}
+                                        className="w-full bg-stone-50 border border-natural-wheat rounded-xl px-3 py-2 text-xs text-natural-espresso placeholder:text-natural-espresso/40 focus:outline-none focus:ring-1 focus:ring-natural-clay focus:bg-white"
+                                      />
+                                    </div>
+
+                                    {/* Photo Upload and Compressor */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                                      <div className="space-y-1">
+                                        <label className="block text-[10px] font-extrabold text-natural-espresso/60 uppercase tracking-wider">
+                                          แนบรูปรีวิวขณะที่ใส่ชุดจริง (ไม่บังคับ)
+                                        </label>
+                                        <div className="relative">
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleReviewImageUpload}
+                                            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                                            disabled={isCompressingImage}
+                                          />
+                                          <div className="bg-stone-50 border border-dashed border-natural-wheat/80 rounded-xl p-3 text-center text-xs hover:bg-stone-100/50 transition-all flex items-center justify-center space-x-2">
+                                            <Camera className="h-4 w-4 text-natural-espresso/40" />
+                                            <span className="font-bold text-natural-espresso/70">
+                                              {isCompressingImage ? 'กำลังเตรียมไฟล์รูปภาพ...' : '📷 อัปโหลดรูปสวมใส่จริง'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {reviewImage && (
+                                        <div className="flex items-center space-x-3 bg-emerald-50/30 p-2.5 rounded-xl border border-emerald-100 relative">
+                                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-natural-sand flex-shrink-0">
+                                            <img src={reviewImage} alt="Uploaded review" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] font-bold text-emerald-800 truncate">อัปโหลดเรียบร้อย ✓</p>
+                                            <p className="text-[9px] text-natural-espresso/40">ภาพถูกจัดสรรย่อขนาดพอดีคลัง</p>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => setReviewImage(null)}
+                                            className="absolute top-1 right-1 p-1 bg-stone-200 hover:bg-stone-300 rounded-full text-natural-espresso/60 cursor-pointer"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Action buttons */}
+                                    <div className="flex justify-end space-x-2 pt-1 border-t border-stone-100">
+                                      <button
+                                        type="button"
+                                        onClick={() => setActiveReviewOrderId(null)}
+                                        className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-natural-espresso/85 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                      >
+                                        ยกเลิก
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => submitCustomerReview(order)}
+                                        disabled={isCompressingImage}
+                                        className="px-5 py-2 bg-natural-clay hover:bg-natural-clay-dark text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1 shadow-2xs cursor-pointer disabled:opacity-55"
+                                      >
+                                        <span>ส่งประเมินรีวิวให้ทางร้าน 💖</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
                           {/* Print details button for specific historical order */}
-                          <div className="pt-2 border-t border-natural-sand/50 flex justify-between items-center text-xs">
+                          <div className="pt-3 border-t border-natural-sand/50 flex justify-between items-center text-xs">
                             <span className="text-[10px] text-natural-espresso/40 flex items-center gap-1">
                               📖 บันทึกไว้ในคลังประวัติความพึงพอใจของห้องเสื้อ NUNUH
                             </span>
