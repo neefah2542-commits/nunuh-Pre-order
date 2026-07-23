@@ -1177,154 +1177,156 @@ export default function OrderForm({ catalogue, onAddOrder, nextOrderNumber, orde
             )}
 
             {/* รูปถ่ายสัดส่วนลูกค้า (ด้านหน้า, ด้านข้าง, ด้านหลัง) */}
-            <div className="pt-4 border-t border-natural-sand/55 space-y-3">
-              <div>
-                <h4 className="text-xs font-bold text-natural-espresso flex items-center space-x-1.5" id="customer-photos-label">
-                  <ImageIcon className="h-3.5 w-3.5 text-natural-clay" />
-                  <span>รูปถ่ายหุ่น/สัดส่วนลูกค้า (Customer Body Photos)</span>
-                </h4>
-                <p className="text-[10px] text-natural-espresso/60">
-                  แนบรูปถ่ายลูกค้าเพื่อช่วยประกอบการพิจารณาสรีระในการขึ้นแพทเทิร์นของช่างให้สมบูรณ์แบบที่สุด (ด้านหน้า, ด้านข้าง, ด้านหลัง)
-                </p>
+            {customerCategory !== 'IDH' && (
+              <div className="pt-4 border-t border-natural-sand/55 space-y-3">
+                <div>
+                  <h4 className="text-xs font-bold text-natural-espresso flex items-center space-x-1.5" id="customer-photos-label">
+                    <ImageIcon className="h-3.5 w-3.5 text-natural-clay" />
+                    <span>รูปถ่ายหุ่น/สัดส่วนลูกค้า (Customer Body Photos)</span>
+                  </h4>
+                  <p className="text-[10px] text-natural-espresso/60">
+                    แนบรูปถ่ายลูกค้าเพื่อช่วยประกอบการพิจารณาสรีระในการขึ้นแพทเทิร์นของช่างให้สมบูรณ์แบบที่สุด (ด้านหน้า, ด้านข้าง, ด้านหลัง)
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* ด้านหน้า */}
+                  <div className="space-y-1.5" id="photo-front-container">
+                    <span className="text-[11px] font-bold text-natural-espresso/70 block">📸 ภาพถ่ายลูกค้า ด้านหน้า</span>
+                    {customerPhotoFront ? (
+                      <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-1.5 flex items-center justify-between">
+                        <img 
+                          src={customerPhotoFront} 
+                          alt="Front View" 
+                          className="h-16 w-16 object-cover rounded-lg border border-natural-wheat shadow-xs"
+                        />
+                        <span className="text-[10px] text-emerald-700 font-bold ml-1">ด้านหน้าเรียบร้อย ✓</span>
+                        <button
+                          type="button"
+                          onClick={() => setCustomerPhotoFront('')}
+                          className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
+                          title="ลบรูปภาพ"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative border border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center flex flex-col items-center justify-center h-[74px]">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              compressImage(file, 800, 800, 0.75)
+                                .then(setCustomerPhotoFront)
+                                .catch((err) => {
+                                  console.error(err);
+                                  alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                                });
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          title="อัปโหลดรูปด้านหน้า"
+                        />
+                        <UploadCloud className="h-5 w-5 text-natural-clay/70 mb-1" />
+                        <span className="text-[10px] font-bold text-natural-espresso/80">อัปโหลดภาพ ด้านหน้า</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ด้านข้าง */}
+                  <div className="space-y-1.5" id="photo-side-container">
+                    <span className="text-[11px] font-bold text-natural-espresso/70 block">📸 ภาพถ่ายลูกค้า ด้านข้าง</span>
+                    {customerPhotoSide ? (
+                      <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-1.5 flex items-center justify-between">
+                        <img 
+                          src={customerPhotoSide} 
+                          alt="Side View" 
+                          className="h-16 w-16 object-cover rounded-lg border border-natural-wheat shadow-xs"
+                        />
+                        <span className="text-[10px] text-emerald-700 font-bold ml-1">ด้านข้างเรียบร้อย ✓</span>
+                        <button
+                          type="button"
+                          onClick={() => setCustomerPhotoSide('')}
+                          className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
+                          title="ลบรูปภาพ"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative border border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center flex flex-col items-center justify-center h-[74px]">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              compressImage(file, 800, 800, 0.75)
+                                .then(setCustomerPhotoSide)
+                                .catch((err) => {
+                                  console.error(err);
+                                  alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                                });
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          title="อัปโหลดรูปด้านข้าง"
+                        />
+                        <UploadCloud className="h-5 w-5 text-natural-clay/70 mb-1" />
+                        <span className="text-[10px] font-bold text-natural-espresso/80">อัปโหลดภาพ ด้านข้าง</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ด้านหลัง */}
+                  <div className="space-y-1.5" id="photo-back-container">
+                    <span className="text-[11px] font-bold text-natural-espresso/70 block">📸 ภาพถ่ายลูกค้า ด้านหลัง</span>
+                    {customerPhotoBack ? (
+                      <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-1.5 flex items-center justify-between">
+                        <img 
+                          src={customerPhotoBack} 
+                          alt="Back View" 
+                          className="h-16 w-16 object-cover rounded-lg border border-natural-wheat shadow-xs"
+                        />
+                        <span className="text-[10px] text-emerald-700 font-bold ml-1">ด้านหลังเรียบร้อย ✓</span>
+                        <button
+                          type="button"
+                          onClick={() => setCustomerPhotoBack('')}
+                          className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
+                          title="ลบรูปภาพ"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative border border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center flex flex-col items-center justify-center h-[74px]">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              compressImage(file, 800, 800, 0.75)
+                                .then(setCustomerPhotoBack)
+                                .catch((err) => {
+                                  console.error(err);
+                                  alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
+                                });
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          title="อัปโหลดรูปด้านหลัง"
+                        />
+                        <UploadCloud className="h-5 w-5 text-natural-clay/70 mb-1" />
+                        <span className="text-[10px] font-bold text-natural-espresso/80">อัปโหลดภาพ ด้านหลัง</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* ด้านหน้า */}
-                <div className="space-y-1.5" id="photo-front-container">
-                  <span className="text-[11px] font-bold text-natural-espresso/70 block">📸 ภาพถ่ายลูกค้า ด้านหน้า</span>
-                  {customerPhotoFront ? (
-                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-1.5 flex items-center justify-between">
-                      <img 
-                        src={customerPhotoFront} 
-                        alt="Front View" 
-                        className="h-16 w-16 object-cover rounded-lg border border-natural-wheat shadow-xs"
-                      />
-                      <span className="text-[10px] text-emerald-700 font-bold ml-1">ด้านหน้าเรียบร้อย ✓</span>
-                      <button
-                        type="button"
-                        onClick={() => setCustomerPhotoFront('')}
-                        className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
-                        title="ลบรูปภาพ"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="relative border border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center flex flex-col items-center justify-center h-[74px]">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            compressImage(file, 800, 800, 0.75)
-                              .then(setCustomerPhotoFront)
-                              .catch((err) => {
-                                console.error(err);
-                                alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
-                              });
-                          }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        title="อัปโหลดรูปด้านหน้า"
-                      />
-                      <UploadCloud className="h-5 w-5 text-natural-clay/70 mb-1" />
-                      <span className="text-[10px] font-bold text-natural-espresso/80">อัปโหลดภาพ ด้านหน้า</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* ด้านข้าง */}
-                <div className="space-y-1.5" id="photo-side-container">
-                  <span className="text-[11px] font-bold text-natural-espresso/70 block">📸 ภาพถ่ายลูกค้า ด้านข้าง</span>
-                  {customerPhotoSide ? (
-                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-1.5 flex items-center justify-between">
-                      <img 
-                        src={customerPhotoSide} 
-                        alt="Side View" 
-                        className="h-16 w-16 object-cover rounded-lg border border-natural-wheat shadow-xs"
-                      />
-                      <span className="text-[10px] text-emerald-700 font-bold ml-1">ด้านข้างเรียบร้อย ✓</span>
-                      <button
-                        type="button"
-                        onClick={() => setCustomerPhotoSide('')}
-                        className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
-                        title="ลบรูปภาพ"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="relative border border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center flex flex-col items-center justify-center h-[74px]">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            compressImage(file, 800, 800, 0.75)
-                              .then(setCustomerPhotoSide)
-                              .catch((err) => {
-                                console.error(err);
-                                alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
-                              });
-                          }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        title="อัปโหลดรูปด้านข้าง"
-                      />
-                      <UploadCloud className="h-5 w-5 text-natural-clay/70 mb-1" />
-                      <span className="text-[10px] font-bold text-natural-espresso/80">อัปโหลดภาพ ด้านข้าง</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* ด้านหลัง */}
-                <div className="space-y-1.5" id="photo-back-container">
-                  <span className="text-[11px] font-bold text-natural-espresso/70 block">📸 ภาพถ่ายลูกค้า ด้านหลัง</span>
-                  {customerPhotoBack ? (
-                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat bg-natural-sand/10 p-1.5 flex items-center justify-between">
-                      <img 
-                        src={customerPhotoBack} 
-                        alt="Back View" 
-                        className="h-16 w-16 object-cover rounded-lg border border-natural-wheat shadow-xs"
-                      />
-                      <span className="text-[10px] text-emerald-700 font-bold ml-1">ด้านหลังเรียบร้อย ✓</span>
-                      <button
-                        type="button"
-                        onClick={() => setCustomerPhotoBack('')}
-                        className="p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-all cursor-pointer mr-1"
-                        title="ลบรูปภาพ"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="relative border border-dashed border-natural-wheat hover:border-natural-clay/40 rounded-xl p-3 transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center flex flex-col items-center justify-center h-[74px]">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            compressImage(file, 800, 800, 0.75)
-                              .then(setCustomerPhotoBack)
-                              .catch((err) => {
-                                console.error(err);
-                                alert('เกิดข้อผิดพลาดในการประมวลผลรูปภาพค่ะ');
-                              });
-                          }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        title="อัปโหลดรูปด้านหลัง"
-                      />
-                      <UploadCloud className="h-5 w-5 text-natural-clay/70 mb-1" />
-                      <span className="text-[10px] font-bold text-natural-espresso/80">อัปโหลดภาพ ด้านหลัง</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* CARD 4: ข้อมูลราคาและการจัดส่ง */}

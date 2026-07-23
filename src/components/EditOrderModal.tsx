@@ -1030,7 +1030,7 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                 <h3 className="font-serif font-bold text-natural-espresso text-sm">5. แนบหรือเปลี่ยนภาพถ่ายประกอบ (Photos Attachment)</h3>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className={`grid grid-cols-2 ${customerCategory === 'IDH' ? 'sm:grid-cols-2 max-w-sm mx-auto' : 'sm:grid-cols-5'} gap-3`}>
                 {/* Design Reference 1 */}
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-natural-espresso/75 text-center">ภาพดีไซน์อ้างอิง 1</p>
@@ -1087,89 +1087,93 @@ export default function EditOrderModal({ order, onClose, onSave }: EditOrderModa
                   )}
                 </div>
 
-                {/* Front View */}
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-natural-espresso/75 text-center">สัดส่วน ด้านหน้า</p>
-                  {customerPhotoFront ? (
-                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
-                      <img src={customerPhotoFront} alt="Front" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                      <button 
-                        type="button" 
-                        onClick={() => setCustomerPhotoFront('')} 
-                        className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-all cursor-pointer"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                {customerCategory !== 'IDH' && (
+                  <>
+                    {/* Front View */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-natural-espresso/75 text-center">สัดส่วน ด้านหน้า</p>
+                      {customerPhotoFront ? (
+                        <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
+                          <img src={customerPhotoFront} alt="Front" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                          <button 
+                            type="button" 
+                            onClick={() => setCustomerPhotoFront('')} 
+                            className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-all cursor-pointer"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative border-2 border-dashed border-natural-sand/50 hover:border-natural-clay/40 rounded-xl h-36 flex flex-col items-center justify-center transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'front')} 
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                          />
+                          <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
+                          <span className="text-[10px] text-natural-espresso/50">อัปโหลดด้านหน้า</span>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="relative border-2 border-dashed border-natural-sand/50 hover:border-natural-clay/40 rounded-xl h-36 flex flex-col items-center justify-center transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'front')} 
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                      />
-                      <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
-                      <span className="text-[10px] text-natural-espresso/50">อัปโหลดด้านหน้า</span>
-                    </div>
-                  )}
-                </div>
 
-                {/* Side View */}
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-natural-espresso/75 text-center">สัดส่วน ด้านข้าง</p>
-                  {customerPhotoSide ? (
-                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
-                      <img src={customerPhotoSide} alt="Side" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                      <button 
-                        type="button" 
-                        onClick={() => setCustomerPhotoSide('')} 
-                        className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-all cursor-pointer"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                    {/* Side View */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-natural-espresso/75 text-center">สัดส่วน ด้านข้าง</p>
+                      {customerPhotoSide ? (
+                        <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
+                          <img src={customerPhotoSide} alt="Side" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                          <button 
+                            type="button" 
+                            onClick={() => setCustomerPhotoSide('')} 
+                            className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-all cursor-pointer"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative border-2 border-dashed border-natural-sand/50 hover:border-natural-clay/40 rounded-xl h-36 flex flex-col items-center justify-center transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'side')} 
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                          />
+                          <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
+                          <span className="text-[10px] text-natural-espresso/50">อัปโหลดด้านข้าง</span>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="relative border-2 border-dashed border-natural-sand/50 hover:border-natural-clay/40 rounded-xl h-36 flex flex-col items-center justify-center transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'side')} 
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                      />
-                      <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
-                      <span className="text-[10px] text-natural-espresso/50">อัปโหลดด้านข้าง</span>
-                    </div>
-                  )}
-                </div>
 
-                {/* Back View */}
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-natural-espresso/75 text-center">สัดส่วน ด้านหลัง</p>
-                  {customerPhotoBack ? (
-                    <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
-                      <img src={customerPhotoBack} alt="Back" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                      <button 
-                        type="button" 
-                        onClick={() => setCustomerPhotoBack('')} 
-                        className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-all cursor-pointer"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                    {/* Back View */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-natural-espresso/75 text-center">สัดส่วน ด้านหลัง</p>
+                      {customerPhotoBack ? (
+                        <div className="relative rounded-xl overflow-hidden border border-natural-wheat h-36 bg-natural-sand/5 flex items-center justify-center group">
+                          <img src={customerPhotoBack} alt="Back" className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                          <button 
+                            type="button" 
+                            onClick={() => setCustomerPhotoBack('')} 
+                            className="absolute top-1.5 right-1.5 p-1 bg-red-500/80 text-white rounded-full hover:bg-red-600 transition-all cursor-pointer"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative border-2 border-dashed border-natural-sand/50 hover:border-natural-clay/40 rounded-xl h-36 flex flex-col items-center justify-center transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'back')} 
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                          />
+                          <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
+                          <span className="text-[10px] text-natural-espresso/50">อัปโหลดด้านหลัง</span>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="relative border-2 border-dashed border-natural-sand/50 hover:border-natural-clay/40 rounded-xl h-36 flex flex-col items-center justify-center transition-all bg-natural-cream/5 hover:bg-natural-sand/10 text-center">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'back')} 
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                      />
-                      <UploadCloud className="h-5 w-5 text-natural-clay/60 mb-1" />
-                      <span className="text-[10px] text-natural-espresso/50">อัปโหลดด้านหลัง</span>
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
             </div>
 
